@@ -1,0 +1,1765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Generations</title>
+
+<!-- =======================================================
+     OG META TAGS — These are invisible tags that messaging apps
+     (iMessage, WhatsApp, Android Messages, Slack, etc.) read
+     when someone pastes your URL. They control:
+       og:title       → The bold title in the preview card
+       og:description → The subtitle text below the title
+       og:image       → The image shown in the preview
+       og:type        → Tells the app "this is a website"
+       og:url         → The canonical URL of the page
+
+     IMPORTANT: Replace YOUR-SITE-URL below with your actual
+     Netlify URL once deployed (e.g. generations-carson.netlify.app)
+     ======================================================= -->
+<meta property="og:title" content="Generations">
+<meta property="og:description" content="Documenting the Carson and Meier lineages; Preserving the stories and memories of the people who shaped us before they're lost to time.">
+<meta property="og:image" content="https://YOUR-SITE-URL/og-image.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://YOUR-SITE-URL/">
+
+<!-- Twitter/X uses its own tags (but falls back to OG if these are missing) -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Generations">
+<meta name="twitter:description" content="Documenting the Carson and Meier lineages">
+<meta name="twitter:image" content="https://YOUR-SITE-URL/og-image.png">
+
+<!-- General description for search engines -->
+<meta name="description" content="Documenting the Carson and Meier lineages; Preserving the stories and memories of the people who shaped us before they're lost to time.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<script src="https://www.youtube.com/iframe_api"></script>
+<style>
+  /* =======================================================
+     RESET & VARIABLES
+     ======================================================= */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #1a1610;
+    --bg-deep: #12100c;
+    --surface: #221e18;
+    --card-bg: #2a2318;
+    --border: #3a3428;
+    --border-hover: #5a4d3c;
+    --text: #d4c4a8;
+    --text-bright: #e8dcc8;
+    --text-muted: #8a7a60;
+    --text-dim: #6a5c44;
+    --accent: #c9a87c;
+    --accent-dim: #6b5a3e;
+    --accent-glow: rgba(201, 168, 124, 0.12);
+    --watched-color: #5a8a5a;
+    --watched-glow: rgba(90, 138, 90, 0.15);
+    --radius: 12px;
+    --radius-sm: 8px;
+    --transition: 0.4s ease-in-out;
+  }
+
+  html {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, sans-serif;
+    line-height: 1.6;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* =======================================================
+     FILM GRAIN TEXTURE (subtle overlay)
+     ======================================================= */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* =======================================================
+     HEADER
+     ======================================================= */
+  .site-header {
+    text-align: center;
+    padding: 48px 24px 20px;
+  }
+
+  .site-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 2.2rem;
+    font-weight: 400;
+    color: var(--text-bright);
+    letter-spacing: 0.03em;
+    margin-bottom: 10px;
+  }
+
+  .site-about {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    max-width: 480px;
+    margin: 0 auto 14px;
+    line-height: 1.65;
+    font-style: italic;
+  }
+
+  .episode-count {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--accent-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* =======================================================
+     CAROUSEL WRAPPER
+     ======================================================= */
+  .carousel-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 20px 0 10px;
+    position: relative;
+  }
+
+  .carousel-container {
+    position: relative;
+    width: 100%;
+  }
+
+  /* =======================================================
+     CAROUSEL TRACK
+     scroll-snap-type: x mandatory  — forces snapping on the X axis
+     scroll-snap-stop: always (on cards) — prevents skipping cards on fast swipe
+     perspective: 1000px — enables 3D transform for tilt effect
+     ======================================================= */
+  .carousel-track {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 20px;
+    padding: 20px calc(50% - 155px);
+    perspective: 1000px;
+    /* NOTE: scroll-behavior: smooth is only applied via JS when clicking arrows.
+       We do NOT set it here because it can fight with snap on touch devices. */
+  }
+  .carousel-track::-webkit-scrollbar { display: none; }
+
+  /* =======================================================
+     CARDS
+     ======================================================= */
+  .card {
+    min-width: 310px;
+    max-width: 310px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    scroll-snap-align: center;
+    scroll-snap-stop: always;  /* STRICT: one card at a time, no skipping */
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition), opacity var(--transition);
+    position: relative;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    /* Entrance animation — starts hidden */
+    opacity: 0;
+    transform: translateY(20px);
+    perspective: 1000px;
+  }
+
+  .card.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .card:hover {
+    transform: scale(1.04) translateY(-8px);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.4), 0 0 24px var(--accent-glow);
+    border-color: var(--accent);
+  }
+
+  /* Smooth tilt reset */
+  .card.tilt {
+    transition: transform 0.15s ease-out, box-shadow 0.4s ease-in-out, border-color 0.4s ease-in-out;
+  }
+
+  /* Mobile tap activation state */
+  .card.mobile-activated {
+    transform: scale(1.04) translateY(-8px);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.4), 0 0 24px var(--accent-glow);
+    border-color: var(--accent);
+  }
+
+  /* Watched state — progress bar at bottom */
+  .card.watched .card-progress-bar {
+    display: block;
+  }
+
+  .card-progress-bar {
+    display: none;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: var(--accent);
+    border-radius: 0 0 var(--radius) var(--radius);
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+
+  /* Duration pill badge */
+  .card-duration {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    color: var(--accent);
+    font-size: 0.7rem;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 4px;
+    z-index: 2;
+    backdrop-filter: blur(4px);
+  }
+
+  /* ----- Card Thumbnail ----- */
+  .card-thumb {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: linear-gradient(135deg, #4a3a28, #302518);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: opacity 0.4s ease;
+  }
+
+  .card-thumb img.loading {
+    opacity: 0;
+  }
+
+  /* Preview iframe inside thumbnail: pointer-events: none means
+     clicks pass THROUGH the iframe to the card behind it.
+     Without this, the iframe "eats" all your clicks and the card
+     never knows you tapped it. position: absolute + inset: 0
+     makes it cover the entire thumbnail area exactly. */
+  .card-thumb iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* ----- Card Body ----- */
+  .card-body {
+    padding: 18px 20px 22px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-bright);
+    margin-bottom: 8px;
+    line-height: 1.35;
+  }
+
+  .card-desc {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    flex: 1;
+  }
+
+  /* =======================================================
+     ARROW BUTTONS — below the carousel on desktop
+     ======================================================= */
+  .carousel-arrows {
+    display: none;  /* hidden on mobile */
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    padding: 16px 0 4px;
+  }
+
+  .carousel-arrow {
+    width: 40px;
+    height: 40px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    color: var(--accent);
+    font-size: 1.2rem;
+    font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .carousel-arrow:hover {
+    background: var(--card-bg);
+    border-color: var(--accent-dim);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  }
+
+  .carousel-arrow:active {
+    transform: scale(0.9);
+  }
+
+  .carousel-arrow.disabled {
+    opacity: 0.2;
+    pointer-events: none;
+  }
+
+  /* =======================================================
+     WATCHED SETTINGS BAR
+     ======================================================= */
+  .watched-bar {
+    text-align: center;
+    padding: 0 24px 10px;
+  }
+
+  .watched-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    cursor: pointer;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid transparent;
+    transition: all 0.25s ease;
+    background: none;
+    font-family: inherit;
+  }
+
+  .watched-toggle:hover {
+    color: var(--text-muted);
+    border-color: var(--border);
+    background: var(--surface);
+  }
+
+  .watched-toggle .toggle-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--watched-color);
+    opacity: 0.6;
+  }
+
+  /* =======================================================
+     FEEDBACK BUTTON & PANEL
+     ======================================================= */
+  .feedback-section {
+    text-align: center;
+    padding: 20px 24px 40px;
+  }
+
+  .feedback-btn {
+    display: inline-block;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--text-dim);
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 8px 20px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    letter-spacing: 0.04em;
+  }
+
+  .feedback-btn:hover {
+    color: var(--text-muted);
+    border-color: var(--accent-dim);
+    background: var(--surface);
+  }
+
+  /* Feedback overlay */
+  .feedback-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(12, 10, 8, 0.8);
+    backdrop-filter: blur(6px);
+    z-index: 1000;
+    align-items: flex-end;
+    justify-content: center;
+  }
+
+  .feedback-overlay.open {
+    display: flex;
+  }
+
+  .feedback-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius) var(--radius) 0 0;
+    width: 100%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 28px 24px 32px;
+    transform: translateY(100%);
+    transition: transform 0.4s ease-in-out;
+  }
+
+  .feedback-overlay.open .feedback-panel {
+    transform: translateY(0);
+  }
+
+  .feedback-close {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 1.4rem;
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+    transition: color 0.2s;
+  }
+  .feedback-close:hover { color: var(--text); }
+
+  .feedback-panel-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+    color: var(--text-bright);
+    margin-bottom: 6px;
+  }
+
+  .feedback-panel-sub {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  /* Category selector */
+  .feedback-categories {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .fb-cat {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .fb-cat:hover {
+    border-color: var(--accent-dim);
+    color: var(--text);
+  }
+
+  .fb-cat.selected {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--text-bright);
+  }
+
+  /* Text area */
+  .fb-textarea {
+    width: 100%;
+    min-height: 100px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    padding: 14px;
+    resize: vertical;
+    transition: border-color 0.25s ease;
+    line-height: 1.6;
+  }
+
+  .fb-textarea:focus {
+    outline: none;
+    border-color: var(--accent-dim);
+  }
+
+  .fb-textarea::placeholder {
+    color: var(--text-dim);
+  }
+
+  /* Name field */
+  .fb-name-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .fb-name-label {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    white-space: nowrap;
+    font-style: italic;
+  }
+
+  .fb-name-input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    padding: 8px 12px;
+    transition: border-color 0.25s ease;
+  }
+
+  .fb-name-input:focus {
+    outline: none;
+    border-color: var(--accent-dim);
+  }
+
+  .fb-name-input::placeholder {
+    color: var(--text-dim);
+  }
+
+  /* Submit */
+  .fb-submit {
+    display: block;
+    width: 100%;
+    margin-top: 18px;
+    padding: 12px;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-sm);
+    color: var(--text-bright);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    letter-spacing: 0.02em;
+  }
+
+  .fb-submit:hover {
+    background: var(--accent);
+    color: var(--bg);
+  }
+
+  .fb-submit:active {
+    transform: scale(0.98);
+  }
+
+  .fb-submit:disabled {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  /* Success state */
+  .fb-success {
+    display: none;
+    text-align: center;
+    padding: 30px 10px;
+  }
+
+  .fb-success.show {
+    display: block;
+  }
+
+  .fb-success-icon {
+    font-size: 2rem;
+    margin-bottom: 12px;
+  }
+
+  .fb-success-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    color: var(--text-bright);
+    margin-bottom: 6px;
+  }
+
+  .fb-success-sub {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+  }
+
+  .fb-form.hidden { display: none; }
+
+  /* Episode dropdown in feedback form */
+  .fb-episode-row {
+    margin-bottom: 14px;
+  }
+
+  .fb-episode-label {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+    display: block;
+    font-style: italic;
+  }
+
+  .fb-episode-select {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.82rem;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b5a3e' d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 12px;
+    transition: border-color 0.25s ease;
+    line-height: 1.4;
+  }
+
+  .fb-episode-select:focus {
+    outline: none;
+    border-color: var(--accent-dim);
+  }
+
+  .fb-episode-select option {
+    background: var(--card-bg);
+    color: var(--text);
+    padding: 10px;
+    font-size: 0.85rem;
+    line-height: 1.8;
+  }
+
+  /* =======================================================
+     VIDEO PLAYER MODAL
+     ======================================================= */
+  /* Video modal uses opacity + visibility for a smooth fade.
+     "visibility: hidden" means it exists but is invisible AND unclickable.
+     "opacity: 0" makes it transparent. Together with transition, you get a fade.
+     When .open is added, both flip to visible/opaque over 0.35s. */
+  .video-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(12, 10, 8, 0);
+    backdrop-filter: blur(0px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.35s ease-in-out, background 0.35s ease-in-out, backdrop-filter 0.35s ease-in-out, visibility 0.35s;
+  }
+
+  .video-modal.open {
+    opacity: 1;
+    visibility: visible;
+    background: rgba(12, 10, 8, 0.7);
+    backdrop-filter: blur(8px);
+  }
+
+  .video-modal-content {
+    width: 100%;
+    max-width: 900px;
+    position: relative;
+    /* Subtle scale-up entrance: starts slightly smaller, grows to full size */
+    transform: scale(0.92);
+    transition: transform 0.35s ease-in-out;
+  }
+
+  .video-modal.open .video-modal-content {
+    transform: scale(1);
+  }
+
+  .video-player-container {
+    position: relative;
+    padding-bottom: 56.25%;
+    height: 0;
+    overflow: hidden;
+    border-radius: var(--radius);
+  }
+
+  .video-player-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: var(--radius);
+  }
+
+  .video-modal-close {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    background: none;
+    border: none;
+    color: var(--text);
+    font-size: 2rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.2s;
+  }
+
+  .video-modal-close:hover {
+    color: var(--accent);
+  }
+
+  .video-modal-link {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 0.82rem;
+  }
+
+  .video-modal-link a {
+    color: var(--accent);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .video-modal-link a:hover {
+    color: var(--text-bright);
+  }
+
+  /* =======================================================
+     DESKTOP OVERRIDES (>= 768px)
+     ======================================================= */
+  @media (min-width: 768px) {
+    .site-header {
+      padding: 56px 40px 24px;
+    }
+
+    .site-title {
+      font-size: 2.8rem;
+    }
+
+    .site-about {
+      font-size: 0.92rem;
+      max-width: 540px;
+    }
+
+    .carousel-track {
+      padding: 24px calc(50% - 240px);
+      gap: 28px;
+    }
+
+    .card {
+      min-width: 480px;
+      max-width: 480px;
+    }
+
+    .card-title {
+      font-size: 1.3rem;
+    }
+
+    .card-desc {
+      font-size: 0.88rem;
+    }
+
+    .card-body {
+      padding: 22px 26px 28px;
+    }
+
+    .carousel-arrows {
+      display: flex;
+    }
+
+    .feedback-overlay {
+      align-items: center;
+    }
+
+    .feedback-panel {
+      border-radius: var(--radius);
+      max-height: 70vh;
+    }
+
+    .video-modal-close {
+      top: 10px;
+      right: 10px;
+    }
+  }
+
+  /* Large desktop */
+  @media (min-width: 1100px) {
+    .card {
+      min-width: 560px;
+      max-width: 560px;
+    }
+
+    .carousel-track {
+      padding: 24px calc(50% - 310px);
+      gap: 36px;
+    }
+
+    .card-title { font-size: 1.45rem; }
+    .card-desc { font-size: 0.92rem; }
+  }
+
+  /* =======================================================
+     ENTRANCE CHOREOGRAPHY
+     Each element starts invisible and fades/slides in on a schedule.
+     Runs on EVERY page load.
+     ======================================================= */
+  .site-title,
+  .site-about,
+  .episode-count,
+  .watched-bar,
+  .feedback-section,
+  .carousel-arrows {
+    opacity: 0;
+    transition: opacity 0.6s ease-in-out, transform 0.6s ease-in-out;
+  }
+
+  .site-title { transition-duration: 1s; }
+  .site-about { transition-duration: 0.7s; }
+  .episode-count,
+  .watched-bar,
+  .feedback-section,
+  .carousel-arrows { transition-duration: 0.5s; }
+
+  /* When the .entrance-visible class is added by JS, fade in */
+  .site-title.entrance-visible,
+  .site-about.entrance-visible,
+  .episode-count.entrance-visible,
+  .watched-bar.entrance-visible,
+  .feedback-section.entrance-visible,
+  .carousel-arrows.entrance-visible {
+    opacity: 1;
+  }
+
+  /* Keep body.no-entrance CSS as fallback (should never be applied) */
+  body.no-entrance .site-title,
+  body.no-entrance .site-about,
+  body.no-entrance .episode-count,
+  body.no-entrance .watched-bar,
+  body.no-entrance .feedback-section,
+  body.no-entrance .carousel-arrows {
+    opacity: 1 !important;
+    transition: none !important;
+  }
+
+  body.no-entrance .card {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+    transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition), opacity var(--transition) !important;
+  }
+
+  /* Small phone */
+  @media (max-width: 380px) {
+    .card {
+      min-width: 280px;
+      max-width: 280px;
+    }
+
+    .carousel-track {
+      padding: 16px calc(50% - 140px);
+    }
+
+    .site-title { font-size: 1.8rem; }
+    .card-title { font-size: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header class="site-header">
+    <h1 class="site-title">Generations</h1>
+    <p class="site-about">Documenting the Carson and Meier lineages; Preserving the stories and memories of the people who shaped us before they're lost to time.</p>
+    <span class="episode-count" id="episodeCount"></span>
+  </header>
+
+  <!-- ===== CAROUSEL ===== -->
+  <section class="carousel-section">
+    <div class="carousel-container">
+      <div class="carousel-track" id="carouselTrack">
+        <!-- Cards injected by JS -->
+      </div>
+    </div>
+    <div class="carousel-arrows" id="carouselArrows">
+      <button class="carousel-arrow disabled" id="arrowLeft" aria-label="Previous episode">&#8249;</button>
+      <button class="carousel-arrow" id="arrowRight" aria-label="Next episode">&#8250;</button>
+    </div>
+  </section>
+
+  <!-- ===== WATCHED INDICATOR TOGGLE ===== -->
+  <div class="watched-bar" id="watchedBar" style="display:none;">
+    <button class="watched-toggle" id="watchedToggle">
+      <span class="toggle-dot"></span>
+      Clear watched history
+    </button>
+  </div>
+
+  <!-- ===== FEEDBACK ===== -->
+  <footer class="feedback-section">
+    <button class="feedback-btn" id="feedbackBtn">Feedback</button>
+  </footer>
+
+  <!-- ===== FEEDBACK OVERLAY ===== -->
+  <div class="feedback-overlay" id="feedbackOverlay">
+    <div class="feedback-panel" style="position:relative;">
+      <button class="feedback-close" id="feedbackClose">&times;</button>
+
+      <!-- Form -->
+      <div class="fb-form" id="fbForm">
+        <div class="feedback-panel-title">Share Your Thoughts</div>
+        <div class="feedback-panel-sub">Anonymous unless you add your name. Pick a category and write whatever comes to mind.</div>
+
+        <div class="feedback-categories" id="fbCategories">
+          <button class="fb-cat selected" data-cat="feedback">Feedback</button>
+          <button class="fb-cat" data-cat="question">Question Suggestion</button>
+          <button class="fb-cat" data-cat="story">Story / Memory</button>
+          <button class="fb-cat" data-cat="correction">Correction</button>
+        </div>
+
+        <div class="fb-episode-row">
+          <span class="fb-episode-label">About a specific episode? (optional)</span>
+          <select class="fb-episode-select" id="fbEpisode">
+            <option value="">General — all episodes</option>
+            <!-- Options populated by JS from episodes data -->
+          </select>
+        </div>
+
+        <textarea class="fb-textarea" id="fbMessage" placeholder="What's on your mind?"></textarea>
+
+        <div class="fb-name-row">
+          <span class="fb-name-label">Your name (optional)</span>
+          <input class="fb-name-input" id="fbName" type="text" placeholder="Anonymous">
+        </div>
+
+        <button class="fb-submit" id="fbSubmit" disabled>Send</button>
+      </div>
+
+      <!-- Success state -->
+      <div class="fb-success" id="fbSuccess">
+        <div class="fb-success-icon">&#10003;</div>
+        <div class="fb-success-text">Thank you</div>
+        <div class="fb-success-sub">Your message has been sent.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== VIDEO PLAYER MODAL ===== -->
+  <div class="video-modal" id="videoModal">
+    <div class="video-modal-content">
+      <button class="video-modal-close" id="videoModalClose">&times;</button>
+      <div class="video-player-container" id="videoPlayerContainer">
+        <!-- YouTube iframe injected by JS -->
+      </div>
+      <div class="video-modal-link">
+        <a id="videoYouTubeLink" href="#" target="_blank">Open in YouTube ↗</a>
+      </div>
+    </div>
+  </div>
+
+
+<script>
+/* =======================================================
+   CONFIG
+   ======================================================= */
+// IMPORTANT: Replace this with your Formspree form ID after creating one at https://formspree.io
+// 1. Sign up (free)  2. Create a form  3. Copy the form ID (looks like "xyzabcde")
+const FORMSPREE_ID = 'xnjgbwqv';
+
+/* =======================================================
+   EPISODE DATA (edit this list to add/remove installments)
+   ======================================================= */
+const episodes = [
+  {
+    youtube: "tr1AEvWw9q8",
+    title: "Generations 1: Begin",
+    desc: "This is a chat between Tim and Scott & Nancy Carson about their lives and their parents' lives growing up.",
+    image: "",
+    duration: "25:41"
+  },
+  {
+    youtube: "1ZH3TpFDW_A",
+    title: "Generations 2: Down to Earth Fun",
+    desc: "Tim, Aaron and Mindy, Mom & Dad discuss their activities and friends growing up.",
+    image: "",
+    duration: "32:18"
+  },
+  {
+    youtube: "hf3ABzMlicc",
+    title: "Generations 3: The Family Ledger",
+    desc: "Tim, Scott & Nancy list out their siblings and their offspring and so on.",
+    image: "",
+    duration: "10:24"
+  }
+];
+
+let currentIndex = 0;
+let ytPlayers = {}; // Store YT.Player instances by video ID
+let currentVideoId = null;
+let progressInterval = null;
+let ytApiReady = false; // Tracks if YouTube's IFrame API has loaded
+
+// onYouTubeIframeAPIReady is a GLOBAL function that YouTube's API calls
+// when it's finished loading. Think of it like YouTube raising its hand
+// and saying "I'm ready, you can make players now."
+// Without this function defined globally, YT.Player would not exist.
+function onYouTubeIframeAPIReady() {
+  ytApiReady = true;
+}
+
+function loadEpisodes() {
+  renderCards();
+  updateArrows();
+  updateEpisodeCount();
+  showWatchedBarIfNeeded();
+}
+
+/* =======================================================
+   YOUTUBE THUMBNAIL WITH FALLBACK
+   ======================================================= */
+function getYouTubeThumbs(videoId) {
+  return [
+    `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+    `https://img.youtube.com/vi/${videoId}/sddefault.jpg`,
+    `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+  ];
+}
+
+function loadThumbnail(img, sources, idx) {
+  if (idx >= sources.length) return; // all failed, leave gradient bg
+  img.src = sources[idx];
+  img.onerror = () => loadThumbnail(img, sources, idx + 1);
+  img.onload = () => {
+    // YouTube returns a 120x90 gray placeholder for missing maxres
+    // Detect it by checking natural dimensions
+    if (img.naturalWidth <= 120 && idx < sources.length - 1) {
+      loadThumbnail(img, sources, idx + 1);
+    } else {
+      img.classList.remove('loading');
+    }
+  };
+}
+
+/* =======================================================
+   PROGRESS TRACKING (localStorage)
+   ======================================================= */
+let progressData = {};
+
+function loadProgress() {
+  try {
+    const stored = localStorage.getItem('generations_progress');
+    if (stored) {
+      progressData = JSON.parse(stored);
+    }
+  } catch (e) { /* localStorage unavailable */ }
+}
+
+function saveProgress() {
+  try {
+    localStorage.setItem('generations_progress', JSON.stringify(progressData));
+  } catch (e) { /* silent fail */ }
+}
+
+function getProgress(videoId) {
+  return progressData[videoId] || 0;
+}
+
+function setProgress(videoId, percentage) {
+  progressData[videoId] = Math.min(100, Math.max(0, percentage));
+  saveProgress();
+}
+
+// showWatchedBarIfNeeded: shows the "Clear watched history" bar
+// if ANY episode has progress > 0. Otherwise hides it.
+function showWatchedBarIfNeeded() {
+  const bar = document.getElementById('watchedBar');
+  const hasAnyProgress = Object.values(progressData).some(p => p > 0);
+  bar.style.display = hasAnyProgress ? 'block' : 'none';
+}
+
+// clearWatched: wipes all progress data and resets all progress bars
+function clearWatched() {
+  progressData = {};
+  saveProgress();
+  // Reset all visible progress bars on cards
+  document.querySelectorAll('.card-progress-bar').forEach(bar => {
+    bar.style.width = '0%';
+  });
+  showWatchedBarIfNeeded();
+}
+
+/* =======================================================
+   VIDEO MODAL
+   ======================================================= */
+const videoModal = document.getElementById('videoModal');
+const videoModalClose = document.getElementById('videoModalClose');
+const videoPlayerContainer = document.getElementById('videoPlayerContainer');
+const videoYouTubeLink = document.getElementById('videoYouTubeLink');
+
+function openVideoModal(videoId) {
+  currentVideoId = videoId;
+  videoYouTubeLink.href = `https://www.youtube.com/watch?v=${videoId}`;
+
+  // Clear any previous player
+  videoPlayerContainer.innerHTML = '';
+  if (ytPlayers[videoId]) {
+    try { ytPlayers[videoId].destroy(); } catch(e) {}
+    delete ytPlayers[videoId];
+  }
+
+  // YT.Player needs a <div> element — it replaces it with an iframe internally.
+  // This is how YouTube's API works: you give it a div ID, and it turns
+  // that div into the video player. You can't pass it an iframe you made yourself.
+  const playerDiv = document.createElement('div');
+  playerDiv.id = 'ytPlayer_' + videoId;
+  videoPlayerContainer.appendChild(playerDiv);
+
+  if (ytApiReady && window.YT && window.YT.Player) {
+    // Get saved progress to resume from where they left off
+    const savedProgress = getProgress(videoId);
+    const ep = episodes.find(e => e.youtube === videoId);
+    // Estimate start time from progress percentage and duration string
+    let startSeconds = 0;
+    if (savedProgress > 0 && savedProgress < 100 && ep && ep.duration) {
+      const parts = ep.duration.split(':').map(Number);
+      const totalSec = parts.length === 2 ? parts[0] * 60 + parts[1] : parts[0] * 3600 + parts[1] * 60 + (parts[2] || 0);
+      startSeconds = Math.floor((savedProgress / 100) * totalSec);
+    }
+
+    ytPlayers[videoId] = new YT.Player(playerDiv.id, {
+      videoId: videoId,
+      playerVars: {
+        autoplay: 1,           // start playing immediately
+        modestbranding: 1,     // minimize YouTube branding
+        rel: 0,                // don't show related videos at end
+        start: startSeconds    // resume from saved position
+      },
+      events: {
+        onReady: onPlayerReady,
+        onStateChange: onPlayerStateChange
+      }
+    });
+  } else {
+    // Fallback if YT API hasn't loaded yet — just use a plain iframe
+    const iframe = document.createElement('iframe');
+    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&modestbranding=1&rel=0`;
+    iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+    iframe.allowFullscreen = true;
+    iframe.style.width = '100%';
+    iframe.style.height = '100%';
+    iframe.style.border = 'none';
+    iframe.style.borderRadius = '8px';
+    videoPlayerContainer.innerHTML = '';
+    videoPlayerContainer.appendChild(iframe);
+  }
+
+  videoModal.classList.add('open');
+
+  // Start tracking progress every 5 seconds
+  startProgressTracking(videoId);
+}
+
+function closeVideoModal() {
+  // Save final progress before closing
+  if (currentVideoId && ytPlayers[currentVideoId]) {
+    try {
+      const player = ytPlayers[currentVideoId];
+      const current = player.getCurrentTime();
+      const duration = player.getDuration();
+      if (duration > 0) {
+        setProgress(currentVideoId, (current / duration) * 100);
+        updateProgressBar(currentVideoId);
+      }
+      player.destroy();
+    } catch(e) {}
+    delete ytPlayers[currentVideoId];
+  }
+
+  // Start the fade-out by removing .open (triggers the CSS transition)
+  videoModal.classList.remove('open');
+  stopProgressTracking();
+  currentVideoId = null;
+
+  // Wait for the fade-out transition to finish (350ms matches the CSS),
+  // THEN remove the iframe. If we removed it immediately, the player
+  // would vanish before the fade completes — looks jarring.
+  setTimeout(() => {
+    videoPlayerContainer.innerHTML = '';
+  }, 350);
+}
+
+function startProgressTracking(videoId) {
+  stopProgressTracking();
+  progressInterval = setInterval(() => {
+    const player = ytPlayers[videoId];
+    if (player && player.getCurrentTime && player.getDuration) {
+      try {
+        const current = player.getCurrentTime();
+        const duration = player.getDuration();
+        if (duration > 0) {
+          const percentage = (current / duration) * 100;
+          setProgress(videoId, percentage);
+          updateProgressBar(videoId);
+        }
+      } catch (e) {
+        // Player not ready yet
+      }
+    }
+  }, 5000);
+}
+
+function stopProgressTracking() {
+  if (progressInterval) {
+    clearInterval(progressInterval);
+    progressInterval = null;
+  }
+}
+
+function onPlayerReady(event) {
+  // Player is ready
+}
+
+function onPlayerStateChange(event) {
+  if (event.data === YT.PlayerState.ENDED) {
+    // Video ended — mark as 100% watched
+    const videoId = Object.keys(ytPlayers).find(id => ytPlayers[id] === event.target);
+    if (videoId) {
+      setProgress(videoId, 100);
+      updateProgressBar(videoId);
+      updateCardWatchedState(videoId);
+    }
+  }
+}
+
+function updateProgressBar(videoId) {
+  const card = document.querySelector(`[data-youtube="${videoId}"]`);
+  if (card) {
+    const bar = card.querySelector('.card-progress-bar');
+    if (bar) {
+      const percentage = getProgress(videoId);
+      bar.style.width = `${percentage}%`;
+    }
+  }
+}
+
+function updateCardWatchedState(videoId) {
+  const card = document.querySelector(`[data-youtube="${videoId}"]`);
+  if (card) {
+    const progress = getProgress(videoId);
+    if (progress >= 100) {
+      card.classList.add('watched');
+    }
+  }
+}
+
+/* =======================================================
+   RENDER CARDS
+   ======================================================= */
+function renderCards() {
+  const track = document.getElementById('carouselTrack');
+  track.innerHTML = '';
+
+  episodes.forEach((ep, i) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.youtube = ep.youtube;
+    card.dataset.index = i;
+    card.dataset.title = ep.title;
+
+    const progress = getProgress(ep.youtube);
+    if (progress >= 100) {
+      card.classList.add('watched');
+    }
+
+    // Touch handling for mobile
+    let touchStart = null;
+    let touchCount = 0;
+
+    card.addEventListener('touchstart', () => {
+      touchStart = new Date().getTime();
+      touchCount++;
+    });
+
+    card.addEventListener('touchend', () => {
+      if (touchStart) {
+        const touchDuration = new Date().getTime() - touchStart;
+        if (touchDuration < 500) {
+          // Tap gesture (not hold)
+          if (touchCount === 1) {
+            // First tap — activate card
+            card.classList.add('mobile-activated');
+          } else if (touchCount === 2) {
+            // Second tap — open modal
+            openVideoModal(ep.youtube);
+            touchCount = 0;
+          }
+        }
+      }
+    });
+
+    // Desktop click — open the video modal
+    card.addEventListener('click', (e) => {
+      // Clean up any hover preview iframe before opening modal
+      if (previewIframe) {
+        previewIframe.remove();
+        previewIframe = null;
+        const img = card.querySelector('.card-thumb img');
+        if (img) img.style.display = 'block';
+      }
+      clearTimeout(hoverTimeout);
+      openVideoModal(ep.youtube);
+    });
+
+    // Deactivate on outside tap
+    document.addEventListener('touchstart', (e) => {
+      if (!card.contains(e.target)) {
+        card.classList.remove('mobile-activated');
+      }
+    });
+
+    // Hover preview (desktop only)
+    let hoverTimeout = null;
+    let previewIframe = null;
+    const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+
+    if (!isMobile) {
+      card.addEventListener('mouseenter', function() {
+        hoverTimeout = setTimeout(() => {
+          const thumb = card.querySelector('.card-thumb');
+          if (thumb && !previewIframe) {
+            previewIframe = document.createElement('iframe');
+            // YouTube embed URL for silent preview:
+            // - autoplay=1: starts playing immediately
+            // - mute=1: no sound (required for autoplay to work)
+            // - controls=0: hides YouTube's play/pause buttons (preview only)
+            // - showinfo=0: hides video title bar
+            // - start=30: skip first 30 seconds (often silence/intro)
+            // - enablejsapi=1: allows our code to talk to the player
+            // Error 153 fix: removed conflicting parameters
+            previewIframe.src = `https://www.youtube.com/embed/${ep.youtube}?autoplay=1&mute=1&start=30&showinfo=0&modestbranding=1&enablejsapi=1`;
+            previewIframe.allow = 'autoplay; encrypted-media';
+            const img = thumb.querySelector('img');
+            if (img) img.style.display = 'none';
+            thumb.appendChild(previewIframe);
+          }
+        }, 1500);
+      });
+
+      card.addEventListener('mouseleave', function() {
+        clearTimeout(hoverTimeout);
+        if (previewIframe) {
+          previewIframe.remove();
+          previewIframe = null;
+          const img = card.querySelector('.card-thumb img');
+          if (img) img.style.display = 'block';
+        }
+      });
+    }
+
+    // 3D tilt effect on mouse move (desktop only)
+    if (!isMobile) {
+      card.addEventListener('mousemove', function(e) {
+        const rect = card.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+
+        const mouseX = e.clientX - centerX;
+        const mouseY = e.clientY - centerY;
+
+        const rotateX = (mouseY / rect.height) * 5; // max 5 degrees
+        const rotateY = (mouseX / rect.width) * -5; // max 5 degrees
+
+        card.style.transform = `scale(1.04) translateY(-8px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+        card.classList.add('tilt');
+      });
+
+      card.addEventListener('mouseleave', function() {
+        card.style.transform = '';
+        card.classList.remove('tilt');
+      });
+    }
+
+    // Thumbnail
+    const thumbDiv = document.createElement('div');
+    thumbDiv.className = 'card-thumb';
+
+    const img = document.createElement('img');
+    img.className = 'loading';
+    img.alt = ep.title;
+
+    if (ep.image && ep.image.length > 0) {
+      // Custom image override
+      img.src = ep.image;
+      img.onload = () => img.classList.remove('loading');
+      img.onerror = () => {
+        // Fallback to YouTube thumbnail if custom image fails
+        loadThumbnail(img, getYouTubeThumbs(ep.youtube), 0);
+      };
+    } else {
+      // YouTube thumbnail with fallback chain
+      loadThumbnail(img, getYouTubeThumbs(ep.youtube), 0);
+    }
+
+    // Duration pill
+    const durationPill = document.createElement('div');
+    durationPill.className = 'card-duration';
+    durationPill.textContent = `⏱ ${ep.duration}`;
+
+    // Progress bar
+    const progressBar = document.createElement('div');
+    progressBar.className = 'card-progress-bar';
+    const percentage = getProgress(ep.youtube);
+    progressBar.style.width = `${percentage}%`;
+    if (percentage > 0) {
+      progressBar.style.display = 'block';
+    }
+
+    thumbDiv.appendChild(img);
+    thumbDiv.appendChild(durationPill);
+    thumbDiv.appendChild(progressBar);
+
+    // Body
+    const body = document.createElement('div');
+    body.className = 'card-body';
+
+    const title = document.createElement('div');
+    title.className = 'card-title';
+    title.textContent = ep.title;
+
+    const desc = document.createElement('div');
+    desc.className = 'card-desc';
+    desc.textContent = ep.desc;
+
+    body.appendChild(title);
+    body.appendChild(desc);
+
+    card.appendChild(thumbDiv);
+    card.appendChild(body);
+    track.appendChild(card);
+  });
+}
+
+/* =======================================================
+   EPISODE COUNT
+   ======================================================= */
+function updateEpisodeCount() {
+  const el = document.getElementById('episodeCount');
+  const count = episodes.length;
+  el.textContent = `${count} installment${count !== 1 ? 's' : ''}`;
+}
+
+/* =======================================================
+   ARROW NAVIGATION
+   ======================================================= */
+const track = document.getElementById('carouselTrack');
+const arrowLeft = document.getElementById('arrowLeft');
+const arrowRight = document.getElementById('arrowRight');
+
+function getCardWidth() {
+  const card = track.querySelector('.card');
+  if (!card) return 330;
+  const style = getComputedStyle(track);
+  const gap = parseInt(style.gap) || 20;
+  return card.offsetWidth + gap;
+}
+
+let scrollAnimationId = null;
+
+function scrollToIndex(idx) {
+  if (idx < 0) idx = 0;
+  if (idx >= episodes.length) idx = episodes.length - 1;
+  currentIndex = idx;
+
+  if (scrollAnimationId !== null) {
+    cancelAnimationFrame(scrollAnimationId);
+    scrollAnimationId = null;
+  }
+
+  const SCROLL_DURATION = 800;
+  const cards = track.querySelectorAll('.card');
+  if (cards[idx]) {
+    track.style.scrollSnapType = 'none';
+
+    const trackRect = track.getBoundingClientRect();
+    const cardRect = cards[idx].getBoundingClientRect();
+    const scrollTarget = track.scrollLeft + (cardRect.left - trackRect.left) - (trackRect.width / 2) + (cardRect.width / 2);
+
+    const startPos = track.scrollLeft;
+    const distance = scrollTarget - startPos;
+    const startTime = performance.now();
+
+    function easeInOutCubic(t) {
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+
+    function animateScroll(currentTime) {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / SCROLL_DURATION, 1);
+      const easedProgress = easeInOutCubic(progress);
+
+      track.scrollLeft = startPos + (distance * easedProgress);
+
+      if (progress < 1) {
+        scrollAnimationId = requestAnimationFrame(animateScroll);
+      } else {
+        track.style.scrollSnapType = 'x mandatory';
+        scrollAnimationId = null;
+      }
+    }
+    scrollAnimationId = requestAnimationFrame(animateScroll);
+  }
+  updateArrows();
+}
+
+function updateArrows() {
+  arrowLeft.classList.toggle('disabled', currentIndex <= 0);
+  arrowRight.classList.toggle('disabled', currentIndex >= episodes.length - 1);
+}
+
+arrowLeft.addEventListener('click', () => scrollToIndex(currentIndex - 1));
+arrowRight.addEventListener('click', () => scrollToIndex(currentIndex + 1));
+
+let scrollTimeout;
+track.addEventListener('scroll', () => {
+  clearTimeout(scrollTimeout);
+  scrollTimeout = setTimeout(() => {
+    const cardWidth = getCardWidth();
+    if (cardWidth > 0) {
+      currentIndex = Math.round(track.scrollLeft / cardWidth);
+      updateArrows();
+    }
+  }, 80);
+});
+
+document.addEventListener('keydown', (e) => {
+  if (document.getElementById('feedbackOverlay').classList.contains('open')) return;
+  if (e.key === 'ArrowLeft') scrollToIndex(currentIndex - 1);
+  if (e.key === 'ArrowRight') scrollToIndex(currentIndex + 1);
+});
+
+/* =======================================================
+   VIDEO MODAL CONTROLS
+   ======================================================= */
+videoModalClose.addEventListener('click', closeVideoModal);
+
+// "Clear watched history" button
+document.getElementById('watchedToggle').addEventListener('click', clearWatched);
+videoModal.addEventListener('click', (e) => {
+  if (e.target === videoModal) closeVideoModal();
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && videoModal.classList.contains('open')) {
+    closeVideoModal();
+  }
+});
+
+/* =======================================================
+   FEEDBACK PANEL
+   ======================================================= */
+const feedbackBtn = document.getElementById('feedbackBtn');
+const feedbackOverlay = document.getElementById('feedbackOverlay');
+const feedbackClose = document.getElementById('feedbackClose');
+const fbForm = document.getElementById('fbForm');
+const fbSuccess = document.getElementById('fbSuccess');
+const fbMessage = document.getElementById('fbMessage');
+const fbName = document.getElementById('fbName');
+const fbSubmit = document.getElementById('fbSubmit');
+const fbEpisode = document.getElementById('fbEpisode');
+let selectedCategory = 'feedback';
+
+function populateEpisodeDropdown() {
+  episodes.forEach((ep, i) => {
+    const option = document.createElement('option');
+    option.value = ep.title;
+    option.textContent = `Ep ${i + 1}: ${ep.title.replace(/Generations \d+: /, '')}`;
+    fbEpisode.appendChild(option);
+  });
+}
+populateEpisodeDropdown();
+
+feedbackBtn.addEventListener('click', () => {
+  feedbackOverlay.classList.add('open');
+  setTimeout(() => fbMessage.focus(), 400);
+});
+
+function closeFeedback() {
+  feedbackOverlay.classList.remove('open');
+  setTimeout(() => {
+    fbForm.classList.remove('hidden');
+    fbSuccess.classList.remove('show');
+    fbMessage.value = '';
+    fbName.value = '';
+    fbEpisode.selectedIndex = 0;
+    fbSubmit.disabled = true;
+  }, 400);
+}
+
+feedbackClose.addEventListener('click', closeFeedback);
+feedbackOverlay.addEventListener('click', (e) => {
+  if (e.target === feedbackOverlay) closeFeedback();
+});
+
+document.querySelectorAll('.fb-cat').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.fb-cat').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    selectedCategory = btn.dataset.cat;
+
+    const placeholders = {
+      feedback: "What's on your mind?",
+      question: "What question should we ask in a future interview?",
+      story: "Share a memory or story that this video reminded you of...",
+      correction: "What needs correcting? Include the episode and timestamp if possible."
+    };
+    fbMessage.placeholder = placeholders[selectedCategory] || "What's on your mind?";
+  });
+});
+
+fbMessage.addEventListener('input', () => {
+  fbSubmit.disabled = fbMessage.value.trim().length === 0;
+});
+
+fbSubmit.addEventListener('click', async () => {
+  const message = fbMessage.value.trim();
+  if (!message) return;
+
+  fbSubmit.disabled = true;
+  fbSubmit.textContent = 'Sending...';
+
+  const payload = {
+    category: selectedCategory,
+    episode: fbEpisode.value || 'General',
+    message: message,
+    name: fbName.value.trim() || 'Anonymous',
+    timestamp: new Date().toISOString()
+  };
+
+  let sent = false;
+
+  if (FORMSPREE_ID) {
+    try {
+      const res = await fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      sent = res.ok;
+    } catch (e) {
+      console.error('Formspree error:', e);
+    }
+  }
+
+  if (!sent && !FORMSPREE_ID) {
+    const subject = encodeURIComponent(`[Generations] ${selectedCategory}`);
+    const body = encodeURIComponent(
+      `Category: ${selectedCategory}\nFrom: ${payload.name}\n\n${message}`
+    );
+    window.open(`mailto:?subject=${subject}&body=${body}`, '_self');
+    sent = true;
+  }
+
+  fbForm.classList.add('hidden');
+  fbSuccess.classList.add('show');
+  fbSubmit.textContent = 'Send';
+
+  setTimeout(closeFeedback, 2200);
+});
+
+/* =======================================================
+   INIT
+   ======================================================= */
+loadProgress();
+loadEpisodes();
+
+/* =======================================================
+   ENTRANCE CHOREOGRAPHY
+   Runs on EVERY page load:
+     0ms    → Title fades in (1s)
+     1000ms → About fades in (700ms)
+     1700ms → Meta bar fades in (500ms)
+     2200ms → Cards slide up (700ms each, 1s stagger)
+   ======================================================= */
+(function runEntrance() {
+  const title = document.querySelector('.site-title');
+  const about = document.querySelector('.site-about');
+  const count = document.getElementById('episodeCount');
+  const watchedBar = document.getElementById('watchedBar');
+  const feedbackSection = document.querySelector('.feedback-section');
+  const arrowsDiv = document.getElementById('carouselArrows');
+  const cards = document.querySelectorAll('.card');
+
+  // Step 1: Title fades in immediately
+  setTimeout(() => {
+    if (title) title.classList.add('entrance-visible');
+  }, 50);
+
+  // Step 2: About text fades in after title
+  setTimeout(() => {
+    if (about) about.classList.add('entrance-visible');
+  }, 1000);
+
+  // Step 3: Meta bar fades in
+  setTimeout(() => {
+    if (count) count.classList.add('entrance-visible');
+    if (watchedBar) watchedBar.classList.add('entrance-visible');
+    if (feedbackSection) feedbackSection.classList.add('entrance-visible');
+    if (arrowsDiv) arrowsDiv.classList.add('entrance-visible');
+  }, 1700);
+
+  // Step 4: Cards slide up with stagger
+  cards.forEach((card, i) => {
+    setTimeout(() => {
+      card.style.transition = 'opacity 0.7s ease-in-out, transform 0.7s ease-in-out';
+      card.classList.add('visible');
+    }, 2200 + i * 1000);
+  });
+})();
+</script>
+
+</body>
+</html>
