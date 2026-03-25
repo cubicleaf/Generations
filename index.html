@@ -15,20 +15,19 @@
        og:type        → Tells the app "this is a website"
        og:url         → The canonical URL of the page
 
-     IMPORTANT: Replace YOUR-SITE-URL below with your actual
-     Netlify URL once deployed (e.g. generations-carson.netlify.app)
+     Your Netlify URL: https://projectgenerations.netlify.app
      ======================================================= -->
 <meta property="og:title" content="Generations">
 <meta property="og:description" content="Documenting the Carson and Meier lineages; Preserving the stories and memories of the people who shaped us before they're lost to time.">
-<meta property="og:image" content="https://YOUR-SITE-URL/og-image.png">
+<meta property="og:image" content="https://projectgenerations.netlify.app/og-image.png">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://YOUR-SITE-URL/">
+<meta property="og:url" content="https://projectgenerations.netlify.app/">
 
 <!-- Twitter/X uses its own tags (but falls back to OG if these are missing) -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Generations">
 <meta name="twitter:description" content="Documenting the Carson and Meier lineages">
-<meta name="twitter:image" content="https://YOUR-SITE-URL/og-image.png">
+<meta name="twitter:image" content="https://projectgenerations.netlify.app/og-image.png">
 
 <!-- General description for search engines -->
 <meta name="description" content="Documenting the Carson and Meier lineages; Preserving the stories and memories of the people who shaped us before they're lost to time.">
@@ -43,6 +42,7 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   :root {
+    /* --- COLORS --- */
     --bg: #1a1610;
     --bg-deep: #12100c;
     --surface: #221e18;
@@ -53,6 +53,7 @@
     --text-bright: #e8dcc8;
     --text-muted: #8a7a60;
     --text-dim: #6a5c44;
+    --text-cream: #f0e6d2;
     --accent: #c9a87c;
     --accent-dim: #6b5a3e;
     --accent-glow: rgba(201, 168, 124, 0.12);
@@ -60,7 +61,29 @@
     --watched-glow: rgba(90, 138, 90, 0.15);
     --radius: 12px;
     --radius-sm: 8px;
-    --transition: 0.4s ease-in-out;
+
+    /* =======================================================
+       ANIMATION TIMING VARIABLES
+       To customize any animation speed, just change the value
+       below. All transitions reference these variables.
+
+       How to read: "600ms" = 0.6 seconds
+       Easing guide:
+         ease-in-out     = slow start & end, fast middle
+         ease-out         = fast start, slow end
+         ease-in          = slow start, fast end
+         ease-in-out-back = slight overshoot/bounce
+       ======================================================= */
+    --preview-fadein-speed: 400ms;     /* Preview iframe fades in */
+    --viewer-morph-speed: 700ms;       /* Card morphs into full viewer */
+    --viewer-morph-easing: cubic-bezier(0.34, 1.56, 0.64, 1); /* slight overshoot */
+    --viewer-backdrop-speed: 500ms;    /* Backdrop blur fades in */
+    --viewer-close-speed: 800ms;       /* Viewer fades out on close */
+    --viewer-end-pause: 2000ms;        /* Pause after video ends before auto-close */
+    --viewer-end-fade: 800ms;          /* Fade out after video ends */
+    --hover-effect-speed: 0.4s;        /* Card hover scale/glow/border */
+    --tilt-speed: 0.15s;               /* 3D tilt on mouse move */
+    --transition: 0.4s ease-in-out;    /* General fallback */
   }
 
   html {
@@ -158,8 +181,6 @@
     gap: 20px;
     padding: 20px calc(50% - 155px);
     perspective: 1000px;
-    /* NOTE: scroll-behavior: smooth is only applied via JS when clicking arrows.
-       We do NOT set it here because it can fight with snap on touch devices. */
   }
   .carousel-track::-webkit-scrollbar { display: none; }
 
@@ -174,10 +195,14 @@
     border-radius: var(--radius);
     overflow: hidden;
     scroll-snap-align: center;
-    scroll-snap-stop: always;  /* STRICT: one card at a time, no skipping */
+    scroll-snap-stop: always;
     flex-shrink: 0;
     cursor: pointer;
-    transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition), opacity var(--transition);
+    transition:
+      transform var(--hover-effect-speed) ease-in-out,
+      box-shadow var(--hover-effect-speed) ease-in-out,
+      border-color var(--hover-effect-speed) ease-in-out,
+      opacity var(--hover-effect-speed) ease-in-out;
     position: relative;
     text-decoration: none;
     color: inherit;
@@ -202,15 +227,17 @@
 
   /* Smooth tilt reset */
   .card.tilt {
-    transition: transform 0.15s ease-out, box-shadow 0.4s ease-in-out, border-color 0.4s ease-in-out;
+    transition: transform var(--tilt-speed) ease-out, box-shadow var(--hover-effect-speed) ease-in-out, border-color var(--hover-effect-speed) ease-in-out;
   }
 
-  /* Mobile tap activation state */
+  /* Mobile tap activation state (hover equivalent) */
   .card.mobile-activated {
     transform: scale(1.04) translateY(-8px);
     box-shadow: 0 16px 40px rgba(0,0,0,0.4), 0 0 24px var(--accent-glow);
     border-color: var(--accent);
   }
+
+
 
   /* Watched state — progress bar at bottom */
   .card.watched .card-progress-bar {
@@ -266,10 +293,7 @@
   }
 
   /* Preview iframe inside thumbnail: pointer-events: none means
-     clicks pass THROUGH the iframe to the card behind it.
-     Without this, the iframe "eats" all your clicks and the card
-     never knows you tapped it. position: absolute + inset: 0
-     makes it cover the entire thumbnail area exactly. */
+     clicks pass THROUGH the iframe to the card behind it. */
   .card-thumb iframe {
     position: absolute;
     inset: 0;
@@ -278,6 +302,12 @@
     border: none;
     pointer-events: none;
     z-index: 1;
+    opacity: 0;
+    transition: opacity var(--preview-fadein-speed) ease-out;
+  }
+
+  .card-thumb iframe.preview-visible {
+    opacity: 1;
   }
 
   /* ----- Card Body ----- */
@@ -308,7 +338,7 @@
      ARROW BUTTONS — below the carousel on desktop
      ======================================================= */
   .carousel-arrows {
-    display: none;  /* hidden on mobile */
+    display: none;
     justify-content: center;
     align-items: center;
     gap: 20px;
@@ -433,13 +463,15 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius) var(--radius) 0 0;
-    width: 100%;
+    width: 85%;
     max-width: 480px;
     max-height: 90vh;
     overflow-y: auto;
     padding: 28px 24px 32px;
     transform: translateY(100%);
     transition: transform 0.4s ease-in-out;
+    /* Center the panel horizontally (parent is display:flex + justify-content:center) */
+    margin: 0 auto;
   }
 
   .feedback-overlay.open .feedback-panel {
@@ -677,12 +709,11 @@
   }
 
   /* =======================================================
-     VIDEO PLAYER MODAL
+     VIDEO PLAYER MODAL — PORTRAIT 9:16 VIEWER
+     Centered on screen. Vignette blur edges.
+     Mobile: fills ~80% of viewport height.
+     Desktop: appropriately sized portrait rectangle.
      ======================================================= */
-  /* Video modal uses opacity + visibility for a smooth fade.
-     "visibility: hidden" means it exists but is invisible AND unclickable.
-     "opacity: 0" makes it transparent. Together with transition, you get a fade.
-     When .open is added, both flip to visible/opaque over 0.35s. */
   .video-modal {
     position: fixed;
     inset: 0;
@@ -692,38 +723,50 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.35s ease-in-out, background 0.35s ease-in-out, backdrop-filter 0.35s ease-in-out, visibility 0.35s;
+    transition:
+      opacity var(--viewer-backdrop-speed) ease-in-out,
+      background var(--viewer-backdrop-speed) ease-in-out,
+      backdrop-filter var(--viewer-backdrop-speed) ease-in-out,
+      visibility var(--viewer-backdrop-speed);
   }
 
   .video-modal.open {
     opacity: 1;
     visibility: visible;
-    background: rgba(12, 10, 8, 0.7);
-    backdrop-filter: blur(8px);
+    background: rgba(12, 10, 8, 0.75);
+    backdrop-filter: blur(10px);
   }
 
   .video-modal-content {
-    width: 100%;
-    max-width: 900px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     position: relative;
-    /* Subtle scale-up entrance: starts slightly smaller, grows to full size */
-    transform: scale(0.92);
-    transition: transform 0.35s ease-in-out;
+    /* Subtle scale-up entrance */
+    transform: scale(0.88);
+    transition: transform var(--viewer-morph-speed) var(--viewer-morph-easing);
   }
 
   .video-modal.open .video-modal-content {
     transform: scale(1);
   }
 
+  /* Portrait player container — 9:16 aspect ratio */
   .video-player-container {
     position: relative;
-    padding-bottom: 56.25%;
-    height: 0;
+    width: 45vh;  /* Width derived from height to maintain 9:16 */
+    height: 80vh;
+    max-width: 90vw;
+    max-height: 85vh;
     overflow: hidden;
     border-radius: var(--radius);
+    /* Vignette blur effect — soft edge glow */
+    box-shadow:
+      inset 0 0 30px 10px rgba(0, 0, 0, 0.6),
+      0 0 60px rgba(0, 0, 0, 0.5),
+      0 0 120px rgba(0, 0, 0, 0.3);
   }
 
   .video-player-container iframe {
@@ -738,20 +781,21 @@
 
   .video-modal-close {
     position: absolute;
-    top: -40px;
-    right: 0;
+    top: -44px;
+    right: -4px;
     background: none;
     border: none;
-    color: var(--text);
+    color: var(--text-muted);
     font-size: 2rem;
     cursor: pointer;
-    padding: 0;
+    padding: 4px 8px;
     line-height: 1;
     transition: color 0.2s;
+    z-index: 10;
   }
 
   .video-modal-close:hover {
-    color: var(--accent);
+    color: var(--text-cream);
   }
 
   .video-modal-link {
@@ -761,13 +805,15 @@
   }
 
   .video-modal-link a {
-    color: var(--accent);
+    color: var(--text-cream);
     text-decoration: none;
     transition: color 0.2s;
+    font-family: 'Playfair Display', Georgia, serif;
+    letter-spacing: 0.03em;
   }
 
   .video-modal-link a:hover {
-    color: var(--text-bright);
+    color: var(--accent);
   }
 
   /* =======================================================
@@ -822,9 +868,10 @@
       max-height: 70vh;
     }
 
-    .video-modal-close {
-      top: 10px;
-      right: 10px;
+    /* Desktop viewer: slightly smaller, well-centered */
+    .video-player-container {
+      width: 40vh;
+      height: 75vh;
     }
   }
 
@@ -846,8 +893,6 @@
 
   /* =======================================================
      ENTRANCE CHOREOGRAPHY
-     Each element starts invisible and fades/slides in on a schedule.
-     Runs on EVERY page load.
      ======================================================= */
   .site-title,
   .site-about,
@@ -866,7 +911,6 @@
   .feedback-section,
   .carousel-arrows { transition-duration: 0.5s; }
 
-  /* When the .entrance-visible class is added by JS, fade in */
   .site-title.entrance-visible,
   .site-about.entrance-visible,
   .episode-count.entrance-visible,
@@ -876,7 +920,6 @@
     opacity: 1;
   }
 
-  /* Keep body.no-entrance CSS as fallback (should never be applied) */
   body.no-entrance .site-title,
   body.no-entrance .site-about,
   body.no-entrance .episode-count,
@@ -890,7 +933,7 @@
   body.no-entrance .card {
     opacity: 1 !important;
     transform: translateY(0) !important;
-    transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition), opacity var(--transition) !important;
+    transition: transform var(--hover-effect-speed) ease-in-out, box-shadow var(--hover-effect-speed) ease-in-out, border-color var(--hover-effect-speed) ease-in-out, opacity var(--hover-effect-speed) ease-in-out !important;
   }
 
   /* Small phone */
@@ -906,6 +949,12 @@
 
     .site-title { font-size: 1.8rem; }
     .card-title { font-size: 1rem; }
+
+    .video-player-container {
+      width: 50vh;
+      height: 80vh;
+      max-width: 92vw;
+    }
   }
 </style>
 </head>
@@ -988,7 +1037,7 @@
     </div>
   </div>
 
-  <!-- ===== VIDEO PLAYER MODAL ===== -->
+  <!-- ===== VIDEO PLAYER MODAL (Portrait 9:16 Viewer) ===== -->
   <div class="video-modal" id="videoModal">
     <div class="video-modal-content">
       <button class="video-modal-close" id="videoModalClose">&times;</button>
@@ -1006,8 +1055,6 @@
 /* =======================================================
    CONFIG
    ======================================================= */
-// IMPORTANT: Replace this with your Formspree form ID after creating one at https://formspree.io
-// 1. Sign up (free)  2. Create a form  3. Copy the form ID (looks like "xyzabcde")
 const FORMSPREE_ID = 'xnjgbwqv';
 
 /* =======================================================
@@ -1038,15 +1085,12 @@ const episodes = [
 ];
 
 let currentIndex = 0;
-let ytPlayers = {}; // Store YT.Player instances by video ID
+let ytPlayers = {};
 let currentVideoId = null;
 let progressInterval = null;
-let ytApiReady = false; // Tracks if YouTube's IFrame API has loaded
+let ytApiReady = false;
 
-// onYouTubeIframeAPIReady is a GLOBAL function that YouTube's API calls
-// when it's finished loading. Think of it like YouTube raising its hand
-// and saying "I'm ready, you can make players now."
-// Without this function defined globally, YT.Player would not exist.
+
 function onYouTubeIframeAPIReady() {
   ytApiReady = true;
 }
@@ -1070,12 +1114,10 @@ function getYouTubeThumbs(videoId) {
 }
 
 function loadThumbnail(img, sources, idx) {
-  if (idx >= sources.length) return; // all failed, leave gradient bg
+  if (idx >= sources.length) return;
   img.src = sources[idx];
   img.onerror = () => loadThumbnail(img, sources, idx + 1);
   img.onload = () => {
-    // YouTube returns a 120x90 gray placeholder for missing maxres
-    // Detect it by checking natural dimensions
     if (img.naturalWidth <= 120 && idx < sources.length - 1) {
       loadThumbnail(img, sources, idx + 1);
     } else {
@@ -1095,13 +1137,13 @@ function loadProgress() {
     if (stored) {
       progressData = JSON.parse(stored);
     }
-  } catch (e) { /* localStorage unavailable */ }
+  } catch (e) {}
 }
 
 function saveProgress() {
   try {
     localStorage.setItem('generations_progress', JSON.stringify(progressData));
-  } catch (e) { /* silent fail */ }
+  } catch (e) {}
 }
 
 function getProgress(videoId) {
@@ -1113,27 +1155,24 @@ function setProgress(videoId, percentage) {
   saveProgress();
 }
 
-// showWatchedBarIfNeeded: shows the "Clear watched history" bar
-// if ANY episode has progress > 0. Otherwise hides it.
 function showWatchedBarIfNeeded() {
   const bar = document.getElementById('watchedBar');
   const hasAnyProgress = Object.values(progressData).some(p => p > 0);
   bar.style.display = hasAnyProgress ? 'block' : 'none';
 }
 
-// clearWatched: wipes all progress data and resets all progress bars
 function clearWatched() {
   progressData = {};
   saveProgress();
-  // Reset all visible progress bars on cards
   document.querySelectorAll('.card-progress-bar').forEach(bar => {
     bar.style.width = '0%';
   });
   showWatchedBarIfNeeded();
 }
 
+
 /* =======================================================
-   VIDEO MODAL
+   VIDEO MODAL (Portrait 9:16 Viewer)
    ======================================================= */
 const videoModal = document.getElementById('videoModal');
 const videoModalClose = document.getElementById('videoModalClose');
@@ -1151,18 +1190,13 @@ function openVideoModal(videoId) {
     delete ytPlayers[videoId];
   }
 
-  // YT.Player needs a <div> element — it replaces it with an iframe internally.
-  // This is how YouTube's API works: you give it a div ID, and it turns
-  // that div into the video player. You can't pass it an iframe you made yourself.
   const playerDiv = document.createElement('div');
   playerDiv.id = 'ytPlayer_' + videoId;
   videoPlayerContainer.appendChild(playerDiv);
 
   if (ytApiReady && window.YT && window.YT.Player) {
-    // Get saved progress to resume from where they left off
     const savedProgress = getProgress(videoId);
     const ep = episodes.find(e => e.youtube === videoId);
-    // Estimate start time from progress percentage and duration string
     let startSeconds = 0;
     if (savedProgress > 0 && savedProgress < 100 && ep && ep.duration) {
       const parts = ep.duration.split(':').map(Number);
@@ -1173,10 +1207,11 @@ function openVideoModal(videoId) {
     ytPlayers[videoId] = new YT.Player(playerDiv.id, {
       videoId: videoId,
       playerVars: {
-        autoplay: 1,           // start playing immediately
-        modestbranding: 1,     // minimize YouTube branding
-        rel: 0,                // don't show related videos at end
-        start: startSeconds    // resume from saved position
+        autoplay: 1,
+        modestbranding: 1,
+        rel: 0,
+        start: startSeconds,
+        playsinline: 1
       },
       events: {
         onReady: onPlayerReady,
@@ -1184,27 +1219,23 @@ function openVideoModal(videoId) {
       }
     });
   } else {
-    // Fallback if YT API hasn't loaded yet — just use a plain iframe
     const iframe = document.createElement('iframe');
-    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&modestbranding=1&rel=0`;
+    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&modestbranding=1&rel=0&playsinline=1`;
     iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
     iframe.allowFullscreen = true;
     iframe.style.width = '100%';
     iframe.style.height = '100%';
     iframe.style.border = 'none';
-    iframe.style.borderRadius = '8px';
+    iframe.style.borderRadius = '12px';
     videoPlayerContainer.innerHTML = '';
     videoPlayerContainer.appendChild(iframe);
   }
 
   videoModal.classList.add('open');
-
-  // Start tracking progress every 5 seconds
   startProgressTracking(videoId);
 }
 
 function closeVideoModal() {
-  // Save final progress before closing
   if (currentVideoId && ytPlayers[currentVideoId]) {
     try {
       const player = ytPlayers[currentVideoId];
@@ -1219,17 +1250,18 @@ function closeVideoModal() {
     delete ytPlayers[currentVideoId];
   }
 
-  // Start the fade-out by removing .open (triggers the CSS transition)
+  // Also show the "Clear watched history" bar immediately if needed
+  showWatchedBarIfNeeded();
+
   videoModal.classList.remove('open');
   stopProgressTracking();
   currentVideoId = null;
 
-  // Wait for the fade-out transition to finish (350ms matches the CSS),
-  // THEN remove the iframe. If we removed it immediately, the player
-  // would vanish before the fade completes — looks jarring.
+  // Wait for fade-out, then clear the iframe
+  const closeSpeed = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--viewer-close-speed')) || 800;
   setTimeout(() => {
     videoPlayerContainer.innerHTML = '';
-  }, 350);
+  }, closeSpeed);
 }
 
 function startProgressTracking(videoId) {
@@ -1245,9 +1277,7 @@ function startProgressTracking(videoId) {
           setProgress(videoId, percentage);
           updateProgressBar(videoId);
         }
-      } catch (e) {
-        // Player not ready yet
-      }
+      } catch (e) {}
     }
   }, 5000);
 }
@@ -1260,17 +1290,21 @@ function stopProgressTracking() {
 }
 
 function onPlayerReady(event) {
-  // Player is ready
+  // Player is ready — sound should be ON by default (no mute call)
 }
 
 function onPlayerStateChange(event) {
   if (event.data === YT.PlayerState.ENDED) {
-    // Video ended — mark as 100% watched
     const videoId = Object.keys(ytPlayers).find(id => ytPlayers[id] === event.target);
     if (videoId) {
       setProgress(videoId, 100);
       updateProgressBar(videoId);
       updateCardWatchedState(videoId);
+
+      // Graceful exit: pause, then slowly close the viewer
+      setTimeout(() => {
+        closeVideoModal();
+      }, 2000); // 2-second pause after video ends
     }
   }
 }
@@ -1282,6 +1316,12 @@ function updateProgressBar(videoId) {
     if (bar) {
       const percentage = getProgress(videoId);
       bar.style.width = `${percentage}%`;
+      // INSTANT UPDATE: Make the bar visible as soon as there's any
+      // progress. Without this, the bar stays hidden (display:none)
+      // until the page reloads and renderCards() runs again.
+      if (percentage > 0) {
+        bar.style.display = 'block';
+      }
     }
   }
 }
@@ -1303,6 +1343,8 @@ function renderCards() {
   const track = document.getElementById('carouselTrack');
   track.innerHTML = '';
 
+  const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
   episodes.forEach((ep, i) => {
     const card = document.createElement('div');
     card.className = 'card';
@@ -1315,76 +1357,52 @@ function renderCards() {
       card.classList.add('watched');
     }
 
-    // Touch handling for mobile
-    let touchStart = null;
-    let touchCount = 0;
+    if (isMobile) {
+      let touchStartX = 0;
+      let touchStartY = 0;
+      let isSwiping = false;
 
-    card.addEventListener('touchstart', () => {
-      touchStart = new Date().getTime();
-      touchCount++;
-    });
+      card.addEventListener('touchstart', (e) => {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        isSwiping = false;
+      }, { passive: true });
 
-    card.addEventListener('touchend', () => {
-      if (touchStart) {
-        const touchDuration = new Date().getTime() - touchStart;
-        if (touchDuration < 500) {
-          // Tap gesture (not hold)
-          if (touchCount === 1) {
-            // First tap — activate card
-            card.classList.add('mobile-activated');
-          } else if (touchCount === 2) {
-            // Second tap — open modal
-            openVideoModal(ep.youtube);
-            touchCount = 0;
-          }
+      card.addEventListener('touchmove', (e) => {
+        const dx = Math.abs(e.touches[0].clientX - touchStartX);
+        const dy = Math.abs(e.touches[0].clientY - touchStartY);
+        if (dx > 15 || dy > 15) {
+          isSwiping = true;
         }
-      }
-    });
+      }, { passive: true });
 
-    // Desktop click — open the video modal
-    card.addEventListener('click', (e) => {
-      // Clean up any hover preview iframe before opening modal
-      if (previewIframe) {
-        previewIframe.remove();
-        previewIframe = null;
-        const img = card.querySelector('.card-thumb img');
-        if (img) img.style.display = 'block';
-      }
-      clearTimeout(hoverTimeout);
-      openVideoModal(ep.youtube);
-    });
-
-    // Deactivate on outside tap
-    document.addEventListener('touchstart', (e) => {
-      if (!card.contains(e.target)) {
-        card.classList.remove('mobile-activated');
-      }
-    });
-
-    // Hover preview (desktop only)
-    let hoverTimeout = null;
-    let previewIframe = null;
-    const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+      card.addEventListener('touchend', (e) => {
+        if (isSwiping) return;
+        e.preventDefault();
+        // Single tap opens the portrait viewer directly
+        openVideoModal(ep.youtube);
+      });
+    }
 
     if (!isMobile) {
+      let hoverTimeout = null;
+      let previewIframe = null;
+
       card.addEventListener('mouseenter', function() {
         hoverTimeout = setTimeout(() => {
           const thumb = card.querySelector('.card-thumb');
           if (thumb && !previewIframe) {
             previewIframe = document.createElement('iframe');
-            // YouTube embed URL for silent preview:
-            // - autoplay=1: starts playing immediately
-            // - mute=1: no sound (required for autoplay to work)
-            // - controls=0: hides YouTube's play/pause buttons (preview only)
-            // - showinfo=0: hides video title bar
-            // - start=30: skip first 30 seconds (often silence/intro)
-            // - enablejsapi=1: allows our code to talk to the player
-            // Error 153 fix: removed conflicting parameters
             previewIframe.src = `https://www.youtube.com/embed/${ep.youtube}?autoplay=1&mute=1&start=30&showinfo=0&modestbranding=1&enablejsapi=1`;
             previewIframe.allow = 'autoplay; encrypted-media';
             const img = thumb.querySelector('img');
-            if (img) img.style.display = 'none';
+            if (img) img.style.opacity = '0';
             thumb.appendChild(previewIframe);
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                previewIframe.classList.add('preview-visible');
+              });
+            });
           }
         }, 1500);
       });
@@ -1392,27 +1410,35 @@ function renderCards() {
       card.addEventListener('mouseleave', function() {
         clearTimeout(hoverTimeout);
         if (previewIframe) {
+          previewIframe.classList.remove('preview-visible');
+          const iframe = previewIframe;
+          previewIframe = null;
+          setTimeout(() => iframe.remove(), 400);
+          const img = card.querySelector('.card-thumb img');
+          if (img) img.style.opacity = '1';
+        }
+      });
+
+      card.addEventListener('click', (e) => {
+        clearTimeout(hoverTimeout);
+        if (previewIframe) {
           previewIframe.remove();
           previewIframe = null;
           const img = card.querySelector('.card-thumb img');
-          if (img) img.style.display = 'block';
+          if (img) img.style.opacity = '1';
         }
+        openVideoModal(ep.youtube);
       });
-    }
 
-    // 3D tilt effect on mouse move (desktop only)
-    if (!isMobile) {
+      // 3D tilt effect on mouse move
       card.addEventListener('mousemove', function(e) {
         const rect = card.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
-
         const mouseX = e.clientX - centerX;
         const mouseY = e.clientY - centerY;
-
-        const rotateX = (mouseY / rect.height) * 5; // max 5 degrees
-        const rotateY = (mouseX / rect.width) * -5; // max 5 degrees
-
+        const rotateX = (mouseY / rect.height) * 5;
+        const rotateY = (mouseX / rect.width) * -5;
         card.style.transform = `scale(1.04) translateY(-8px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
         card.classList.add('tilt');
       });
@@ -1432,22 +1458,19 @@ function renderCards() {
     img.alt = ep.title;
 
     if (ep.image && ep.image.length > 0) {
-      // Custom image override
       img.src = ep.image;
       img.onload = () => img.classList.remove('loading');
       img.onerror = () => {
-        // Fallback to YouTube thumbnail if custom image fails
         loadThumbnail(img, getYouTubeThumbs(ep.youtube), 0);
       };
     } else {
-      // YouTube thumbnail with fallback chain
       loadThumbnail(img, getYouTubeThumbs(ep.youtube), 0);
     }
 
     // Duration pill
     const durationPill = document.createElement('div');
     durationPill.className = 'card-duration';
-    durationPill.textContent = `⏱ ${ep.duration}`;
+    durationPill.textContent = ep.duration;
 
     // Progress bar
     const progressBar = document.createElement('div');
@@ -1577,6 +1600,7 @@ track.addEventListener('scroll', () => {
 
 document.addEventListener('keydown', (e) => {
   if (document.getElementById('feedbackOverlay').classList.contains('open')) return;
+  if (videoModal.classList.contains('open')) return;
   if (e.key === 'ArrowLeft') scrollToIndex(currentIndex - 1);
   if (e.key === 'ArrowRight') scrollToIndex(currentIndex + 1);
 });
@@ -1585,10 +1609,10 @@ document.addEventListener('keydown', (e) => {
    VIDEO MODAL CONTROLS
    ======================================================= */
 videoModalClose.addEventListener('click', closeVideoModal);
-
-// "Clear watched history" button
 document.getElementById('watchedToggle').addEventListener('click', clearWatched);
+
 videoModal.addEventListener('click', (e) => {
+  // Clicking the backdrop (outside the content) closes the viewer
   if (e.target === videoModal) closeVideoModal();
 });
 
@@ -1733,17 +1757,14 @@ loadEpisodes();
   const arrowsDiv = document.getElementById('carouselArrows');
   const cards = document.querySelectorAll('.card');
 
-  // Step 1: Title fades in immediately
   setTimeout(() => {
     if (title) title.classList.add('entrance-visible');
   }, 50);
 
-  // Step 2: About text fades in after title
   setTimeout(() => {
     if (about) about.classList.add('entrance-visible');
   }, 1000);
 
-  // Step 3: Meta bar fades in
   setTimeout(() => {
     if (count) count.classList.add('entrance-visible');
     if (watchedBar) watchedBar.classList.add('entrance-visible');
@@ -1751,10 +1772,9 @@ loadEpisodes();
     if (arrowsDiv) arrowsDiv.classList.add('entrance-visible');
   }, 1700);
 
-  // Step 4: Cards slide up with stagger
   cards.forEach((card, i) => {
     setTimeout(() => {
-      card.style.transition = 'opacity 0.7s ease-in-out, transform 0.7s ease-in-out';
+      card.style.transition = 'opacity 0.7s ease-in-out, transform 0.7s ease-in-out, box-shadow var(--hover-effect-speed) ease-in-out, border-color var(--hover-effect-speed) ease-in-out';
       card.classList.add('visible');
     }, 2200 + i * 1000);
   });
