@@ -6,15 +6,7 @@
 <title>Generations</title>
 
 <!-- =======================================================
-     OG META TAGS — These are invisible tags that messaging apps
-     (iMessage, WhatsApp, Android Messages, Slack, etc.) read
-     when someone pastes your URL. They control:
-       og:title       → The bold title in the preview card
-       og:description → The subtitle text below the title
-       og:image       → The image shown in the preview
-       og:type        → Tells the app "this is a website"
-       og:url         → The canonical URL of the page
-
+     OG META TAGS
      Your Netlify URL: https://projectgenerations.netlify.app
      ======================================================= -->
 <meta property="og:title" content="Generations">
@@ -22,14 +14,10 @@
 <meta property="og:image" content="https://projectgenerations.netlify.app/og-image.png">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://projectgenerations.netlify.app/">
-
-<!-- Twitter/X uses its own tags (but falls back to OG if these are missing) -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Generations">
 <meta name="twitter:description" content="Documenting the Carson and Meier lineages">
 <meta name="twitter:image" content="https://projectgenerations.netlify.app/og-image.png">
-
-<!-- General description for search engines -->
 <meta name="description" content="Documenting the Carson and Meier lineages; Preserving the stories and memories of the people who shaped us before they're lost to time.">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -42,7 +30,6 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   :root {
-    /* --- COLORS --- */
     --bg: #1a1610;
     --bg-deep: #12100c;
     --surface: #221e18;
@@ -62,28 +49,12 @@
     --radius: 12px;
     --radius-sm: 8px;
 
-    /* =======================================================
-       ANIMATION TIMING VARIABLES
-       To customize any animation speed, just change the value
-       below. All transitions reference these variables.
-
-       How to read: "600ms" = 0.6 seconds
-       Easing guide:
-         ease-in-out     = slow start & end, fast middle
-         ease-out         = fast start, slow end
-         ease-in          = slow start, fast end
-         ease-in-out-back = slight overshoot/bounce
-       ======================================================= */
-    --preview-fadein-speed: 400ms;     /* Preview iframe fades in */
-    --viewer-morph-speed: 700ms;       /* Card morphs into full viewer */
-    --viewer-morph-easing: cubic-bezier(0.34, 1.56, 0.64, 1); /* slight overshoot */
-    --viewer-backdrop-speed: 500ms;    /* Backdrop blur fades in */
-    --viewer-close-speed: 800ms;       /* Viewer fades out on close */
-    --viewer-end-pause: 2000ms;        /* Pause after video ends before auto-close */
-    --viewer-end-fade: 800ms;          /* Fade out after video ends */
-    --hover-effect-speed: 0.4s;        /* Card hover scale/glow/border */
-    --tilt-speed: 0.15s;               /* 3D tilt on mouse move */
-    --transition: 0.4s ease-in-out;    /* General fallback */
+    /* ANIMATION TIMING */
+    --hover-effect-speed: 0.4s;
+    --tilt-speed: 0.15s;
+    --morph-duration: 800ms;
+    --morph-easing: cubic-bezier(0.4, 0.0, 0.2, 1);
+    --transition: 0.4s ease-in-out;
   }
 
   html {
@@ -101,9 +72,7 @@
     flex-direction: column;
   }
 
-  /* =======================================================
-     FILM GRAIN TEXTURE (subtle overlay)
-     ======================================================= */
+  /* Film grain */
   body::before {
     content: '';
     position: fixed;
@@ -119,7 +88,7 @@
      ======================================================= */
   .site-header {
     text-align: center;
-    padding: 48px 24px 20px;
+    padding: 48px 24px 12px;
   }
 
   .site-title {
@@ -135,11 +104,12 @@
     font-size: 0.88rem;
     color: var(--text-muted);
     max-width: 480px;
-    margin: 0 auto 14px;
+    margin: 0 auto;
     line-height: 1.65;
     font-style: italic;
   }
 
+  /* Episode count — sits between carousel and feedback */
   .episode-count {
     font-family: 'Inter', sans-serif;
     font-size: 0.72rem;
@@ -147,17 +117,20 @@
     color: var(--accent-dim);
     letter-spacing: 0.1em;
     text-transform: uppercase;
+    text-align: center;
+    display: block;
+    padding: 6px 0;
   }
 
   /* =======================================================
-     CAROUSEL WRAPPER
+     CAROUSEL
      ======================================================= */
   .carousel-section {
     flex: 1;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: 20px 0 10px;
+    padding: 10px 0 10px;
     position: relative;
   }
 
@@ -166,12 +139,6 @@
     width: 100%;
   }
 
-  /* =======================================================
-     CAROUSEL TRACK
-     scroll-snap-type: x mandatory  — forces snapping on the X axis
-     scroll-snap-stop: always (on cards) — prevents skipping cards on fast swipe
-     perspective: 1000px — enables 3D transform for tilt effect
-     ======================================================= */
   .carousel-track {
     display: flex;
     overflow-x: auto;
@@ -219,19 +186,16 @@
     transform: translateY(0);
   }
 
-  .card:hover {
-    transform: scale(1.04) translateY(-8px);
-    box-shadow: 0 16px 40px rgba(0,0,0,0.4), 0 0 24px var(--accent-glow);
-    border-color: var(--accent);
-  }
+  /* NO default :hover effect — emphasis is JS-controlled for centered card only */
 
   /* Smooth tilt reset */
   .card.tilt {
     transition: transform var(--tilt-speed) ease-out, box-shadow var(--hover-effect-speed) ease-in-out, border-color var(--hover-effect-speed) ease-in-out;
   }
 
-  /* Mobile tap activation state (hover equivalent) */
-  .card.mobile-activated {
+  /* Emphasized state — applied only to the centered card
+     on hover (desktop) or first tap (mobile) */
+  .card.emphasized {
     transform: scale(1.04) translateY(-8px);
     box-shadow: 0 16px 40px rgba(0,0,0,0.4), 0 0 24px var(--accent-glow);
     border-color: var(--accent);
@@ -239,17 +203,6 @@
 
   /* =======================================================
      MORPH SYSTEM
-     When the user taps/clicks the centered card, a clone of
-     the card floats out of the carousel (position: fixed) and
-     morphs into a portrait 9:16 viewer centered on screen.
-
-     How it works:
-     1. Clone is created at the card's exact screen position
-     2. CSS transition animates it to center + portrait shape
-     3. .card-body inside the clone fades out during morph
-     4. Backdrop dims + blurs behind it
-     5. YouTube iframe loads after morph completes
-     6. Closing reverses the process
      ======================================================= */
   .morph-backdrop {
     position: fixed;
@@ -259,12 +212,12 @@
     z-index: 2000;
     opacity: 0;
     pointer-events: none;
-    transition: all 700ms ease-in-out;
+    transition: all var(--morph-duration) var(--morph-easing);
   }
 
   .morph-backdrop.active {
-    background: rgba(12, 10, 8, 0.75);
-    backdrop-filter: blur(10px);
+    background: rgba(12, 10, 8, 0.8);
+    backdrop-filter: blur(12px);
     opacity: 1;
     pointer-events: auto;
   }
@@ -278,17 +231,19 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    /* This transition drives the entire morph animation */
-    transition: top 700ms ease-in-out,
-                left 700ms ease-in-out,
-                width 700ms ease-in-out,
-                height 700ms ease-in-out,
-                border-color 700ms ease-in-out,
-                box-shadow 700ms ease-in-out;
+    /* Smooth morph transition for position + size */
+    transition: top var(--morph-duration) var(--morph-easing),
+                left var(--morph-duration) var(--morph-easing),
+                width var(--morph-duration) var(--morph-easing),
+                height var(--morph-duration) var(--morph-easing),
+                border-color var(--morph-duration) var(--morph-easing),
+                border-radius var(--morph-duration) var(--morph-easing),
+                box-shadow 400ms ease-out 600ms;
   }
 
+  /* Card body (title/desc) fades out immediately during morph */
   .morph-viewer .card-body {
-    transition: opacity 400ms ease-out, max-height 500ms ease-in-out;
+    transition: opacity 300ms ease-out, max-height 400ms ease-in-out;
     overflow: hidden;
   }
 
@@ -298,21 +253,16 @@
     padding: 0;
   }
 
-  .morph-viewer.morphed {
-    border-color: transparent;
-    /* Vignette blur: soft dark edges blending into the backdrop */
-    box-shadow:
-      inset 0 0 40px 15px rgba(0, 0, 0, 0.7),
-      0 0 80px rgba(0, 0, 0, 0.6),
-      0 0 160px rgba(0, 0, 0, 0.3);
-  }
-
+  /* Thumbnail area in the clone — MUST override the base card's
+     aspect-ratio: 16/9 so it can fill the full viewer height */
   .morph-viewer .card-thumb {
     width: 100%;
     flex: 1;
+    aspect-ratio: auto !important;
     position: relative;
     overflow: hidden;
-    background: linear-gradient(135deg, #4a3a28, #302518);
+    background: #0c0a08;
+    transition: background 500ms ease-out;
   }
 
   .morph-viewer .card-thumb img {
@@ -320,13 +270,15 @@
     height: 100%;
     object-fit: cover;
     display: block;
-    transition: opacity 600ms ease-out;
+    transition: opacity 500ms ease-out;
   }
 
+  /* Fade thumbnail to dark during morph */
   .morph-viewer.morphed .card-thumb img {
     opacity: 0;
   }
 
+  /* The YouTube iframe inside the morph viewer */
   .morph-viewer .card-thumb iframe {
     position: absolute;
     inset: 0;
@@ -336,15 +288,42 @@
     border-radius: 0;
   }
 
-  .morph-viewer .card-duration {
-    display: none;
+  .morph-viewer .card-duration { display: none; }
+  .morph-viewer .card-progress-bar { display: none; }
+
+  /* Morphed state — vignette + edge blur + seamless blending */
+  .morph-viewer.morphed {
+    border-color: transparent;
+    border-radius: 6px;
+    /* VIGNETTE: heavy inset shadow creating dark soft edges */
+    box-shadow:
+      inset 0 0 60px 25px rgba(0, 0, 0, 0.8),
+      inset 0 0 120px 40px rgba(0, 0, 0, 0.4),
+      0 0 80px rgba(0, 0, 0, 0.7),
+      0 0 200px rgba(0, 0, 0, 0.4);
   }
 
-  .morph-viewer .card-progress-bar {
-    display: none;
+  /* EDGE BLUR: pseudo-element that blurs the outer edges of the viewer.
+     Uses a gradient mask so center is clear, edges are blurred. */
+  .morph-viewer.morphed::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    z-index: 10;
+    border-radius: 6px;
+    /* Layered gradients create a soft blurred-edge frame */
+    background:
+      radial-gradient(ellipse at center, transparent 55%, rgba(12, 10, 8, 0.3) 75%, rgba(12, 10, 8, 0.7) 100%);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 400ms ease-out;
   }
 
-  /* "Open in YouTube" link below the morphed viewer */
+  .morph-viewer.morph-blurred::after {
+    opacity: 1;
+  }
+
+  /* "Open in YouTube" link below viewer */
   .morph-yt-link {
     position: fixed;
     z-index: 2002;
@@ -372,7 +351,7 @@
     color: var(--accent);
   }
 
-  /* Watched state — progress bar at bottom */
+  /* Progress bar on cards */
   .card.watched .card-progress-bar {
     display: block;
   }
@@ -389,7 +368,7 @@
     transition: width 0.3s ease;
   }
 
-  /* Duration pill badge */
+  /* Duration pill */
   .card-duration {
     position: absolute;
     bottom: 10px;
@@ -404,7 +383,7 @@
     backdrop-filter: blur(4px);
   }
 
-  /* ----- Card Thumbnail ----- */
+  /* Card Thumbnail */
   .card-thumb {
     width: 100%;
     aspect-ratio: 16 / 9;
@@ -425,25 +404,7 @@
     opacity: 0;
   }
 
-  /* Preview iframe inside thumbnail: pointer-events: none means
-     clicks pass THROUGH the iframe to the card behind it. */
-  .card-thumb iframe {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    border: none;
-    pointer-events: none;
-    z-index: 1;
-    opacity: 0;
-    transition: opacity var(--preview-fadein-speed) ease-out;
-  }
-
-  .card-thumb iframe.preview-visible {
-    opacity: 1;
-  }
-
-  /* ----- Card Body ----- */
+  /* Card Body */
   .card-body {
     padding: 18px 20px 22px;
     flex: 1;
@@ -468,7 +429,7 @@
   }
 
   /* =======================================================
-     ARROW BUTTONS — below the carousel on desktop
+     ARROW BUTTONS
      ======================================================= */
   .carousel-arrows {
     display: none;
@@ -501,14 +462,8 @@
     box-shadow: 0 4px 16px rgba(0,0,0,0.3);
   }
 
-  .carousel-arrow:active {
-    transform: scale(0.9);
-  }
-
-  .carousel-arrow.disabled {
-    opacity: 0.2;
-    pointer-events: none;
-  }
+  .carousel-arrow:active { transform: scale(0.9); }
+  .carousel-arrow.disabled { opacity: 0.2; pointer-events: none; }
 
   /* =======================================================
      WATCHED SETTINGS BAR
@@ -548,7 +503,7 @@
   }
 
   /* =======================================================
-     FEEDBACK BUTTON & PANEL
+     FEEDBACK
      ======================================================= */
   .feedback-section {
     text-align: center;
@@ -576,7 +531,6 @@
     background: var(--surface);
   }
 
-  /* Feedback overlay */
   .feedback-overlay {
     display: none;
     position: fixed;
@@ -588,9 +542,7 @@
     justify-content: center;
   }
 
-  .feedback-overlay.open {
-    display: flex;
-  }
+  .feedback-overlay.open { display: flex; }
 
   .feedback-panel {
     background: var(--surface);
@@ -603,13 +555,10 @@
     padding: 28px 24px 32px;
     transform: translateY(100%);
     transition: transform 0.4s ease-in-out;
-    /* Center the panel horizontally (parent is display:flex + justify-content:center) */
     margin: 0 auto;
   }
 
-  .feedback-overlay.open .feedback-panel {
-    transform: translateY(0);
-  }
+  .feedback-overlay.open .feedback-panel { transform: translateY(0); }
 
   .feedback-close {
     position: absolute;
@@ -640,13 +589,7 @@
     line-height: 1.5;
   }
 
-  /* Category selector */
-  .feedback-categories {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 14px;
-  }
+  .feedback-categories { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
 
   .fb-cat {
     font-family: 'Inter', sans-serif;
@@ -660,19 +603,9 @@
     cursor: pointer;
     transition: all 0.2s ease;
   }
+  .fb-cat:hover { border-color: var(--accent-dim); color: var(--text); }
+  .fb-cat.selected { background: var(--accent-dim); border-color: var(--accent); color: var(--text-bright); }
 
-  .fb-cat:hover {
-    border-color: var(--accent-dim);
-    color: var(--text);
-  }
-
-  .fb-cat.selected {
-    background: var(--accent-dim);
-    border-color: var(--accent);
-    color: var(--text-bright);
-  }
-
-  /* Text area */
   .fb-textarea {
     width: 100%;
     min-height: 100px;
@@ -687,30 +620,11 @@
     transition: border-color 0.25s ease;
     line-height: 1.6;
   }
+  .fb-textarea:focus { outline: none; border-color: var(--accent-dim); }
+  .fb-textarea::placeholder { color: var(--text-dim); }
 
-  .fb-textarea:focus {
-    outline: none;
-    border-color: var(--accent-dim);
-  }
-
-  .fb-textarea::placeholder {
-    color: var(--text-dim);
-  }
-
-  /* Name field */
-  .fb-name-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 14px;
-  }
-
-  .fb-name-label {
-    font-size: 0.72rem;
-    color: var(--text-dim);
-    white-space: nowrap;
-    font-style: italic;
-  }
+  .fb-name-row { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+  .fb-name-label { font-size: 0.72rem; color: var(--text-dim); white-space: nowrap; font-style: italic; }
 
   .fb-name-input {
     flex: 1;
@@ -723,17 +637,9 @@
     padding: 8px 12px;
     transition: border-color 0.25s ease;
   }
+  .fb-name-input:focus { outline: none; border-color: var(--accent-dim); }
+  .fb-name-input::placeholder { color: var(--text-dim); }
 
-  .fb-name-input:focus {
-    outline: none;
-    border-color: var(--accent-dim);
-  }
-
-  .fb-name-input::placeholder {
-    color: var(--text-dim);
-  }
-
-  /* Submit */
   .fb-submit {
     display: block;
     width: 100%;
@@ -750,63 +656,19 @@
     transition: all 0.25s ease;
     letter-spacing: 0.02em;
   }
+  .fb-submit:hover { background: var(--accent); color: var(--bg); }
+  .fb-submit:active { transform: scale(0.98); }
+  .fb-submit:disabled { opacity: 0.4; pointer-events: none; }
 
-  .fb-submit:hover {
-    background: var(--accent);
-    color: var(--bg);
-  }
-
-  .fb-submit:active {
-    transform: scale(0.98);
-  }
-
-  .fb-submit:disabled {
-    opacity: 0.4;
-    pointer-events: none;
-  }
-
-  /* Success state */
-  .fb-success {
-    display: none;
-    text-align: center;
-    padding: 30px 10px;
-  }
-
-  .fb-success.show {
-    display: block;
-  }
-
-  .fb-success-icon {
-    font-size: 2rem;
-    margin-bottom: 12px;
-  }
-
-  .fb-success-text {
-    font-family: 'Playfair Display', serif;
-    font-size: 1rem;
-    color: var(--text-bright);
-    margin-bottom: 6px;
-  }
-
-  .fb-success-sub {
-    font-size: 0.78rem;
-    color: var(--text-dim);
-  }
-
+  .fb-success { display: none; text-align: center; padding: 30px 10px; }
+  .fb-success.show { display: block; }
+  .fb-success-icon { font-size: 2rem; margin-bottom: 12px; }
+  .fb-success-text { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--text-bright); margin-bottom: 6px; }
+  .fb-success-sub { font-size: 0.78rem; color: var(--text-dim); }
   .fb-form.hidden { display: none; }
 
-  /* Episode dropdown in feedback form */
-  .fb-episode-row {
-    margin-bottom: 14px;
-  }
-
-  .fb-episode-label {
-    font-size: 0.72rem;
-    color: var(--text-dim);
-    margin-bottom: 6px;
-    display: block;
-    font-style: italic;
-  }
+  .fb-episode-row { margin-bottom: 14px; }
+  .fb-episode-label { font-size: 0.72rem; color: var(--text-dim); margin-bottom: 6px; display: block; font-style: italic; }
 
   .fb-episode-select {
     width: 100%;
@@ -827,85 +689,34 @@
     transition: border-color 0.25s ease;
     line-height: 1.4;
   }
-
-  .fb-episode-select:focus {
-    outline: none;
-    border-color: var(--accent-dim);
-  }
-
-  .fb-episode-select option {
-    background: var(--card-bg);
-    color: var(--text);
-    padding: 10px;
-    font-size: 0.85rem;
-    line-height: 1.8;
-  }
+  .fb-episode-select:focus { outline: none; border-color: var(--accent-dim); }
+  .fb-episode-select option { background: var(--card-bg); color: var(--text); padding: 10px; font-size: 0.85rem; line-height: 1.8; }
 
   /* =======================================================
      DESKTOP OVERRIDES (>= 768px)
      ======================================================= */
   @media (min-width: 768px) {
-    .site-header {
-      padding: 56px 40px 24px;
-    }
+    .site-header { padding: 56px 40px 16px; }
+    .site-title { font-size: 2.8rem; }
+    .site-about { font-size: 0.92rem; max-width: 540px; }
 
-    .site-title {
-      font-size: 2.8rem;
-    }
+    .carousel-track { padding: 24px calc(50% - 240px); gap: 28px; }
 
-    .site-about {
-      font-size: 0.92rem;
-      max-width: 540px;
-    }
+    .card { min-width: 480px; max-width: 480px; }
+    .card-title { font-size: 1.3rem; }
+    .card-desc { font-size: 0.88rem; }
+    .card-body { padding: 22px 26px 28px; }
 
-    .carousel-track {
-      padding: 24px calc(50% - 240px);
-      gap: 28px;
-    }
+    .carousel-arrows { display: flex; }
 
-    .card {
-      min-width: 480px;
-      max-width: 480px;
-    }
-
-    .card-title {
-      font-size: 1.3rem;
-    }
-
-    .card-desc {
-      font-size: 0.88rem;
-    }
-
-    .card-body {
-      padding: 22px 26px 28px;
-    }
-
-    .carousel-arrows {
-      display: flex;
-    }
-
-    .feedback-overlay {
-      align-items: center;
-    }
-
-    .feedback-panel {
-      border-radius: var(--radius);
-      max-height: 70vh;
-    }
+    .feedback-overlay { align-items: center; }
+    .feedback-panel { border-radius: var(--radius); max-height: 70vh; }
   }
 
   /* Large desktop */
   @media (min-width: 1100px) {
-    .card {
-      min-width: 560px;
-      max-width: 560px;
-    }
-
-    .carousel-track {
-      padding: 24px calc(50% - 310px);
-      gap: 36px;
-    }
-
+    .card { min-width: 560px; max-width: 560px; }
+    .carousel-track { padding: 24px calc(50% - 310px); gap: 36px; }
     .card-title { font-size: 1.45rem; }
     .card-desc { font-size: 0.92rem; }
   }
@@ -957,15 +768,8 @@
 
   /* Small phone */
   @media (max-width: 380px) {
-    .card {
-      min-width: 280px;
-      max-width: 280px;
-    }
-
-    .carousel-track {
-      padding: 16px calc(50% - 140px);
-    }
-
+    .card { min-width: 280px; max-width: 280px; }
+    .carousel-track { padding: 16px calc(50% - 140px); }
     .site-title { font-size: 1.8rem; }
     .card-title { font-size: 1rem; }
   }
@@ -977,7 +781,6 @@
   <header class="site-header">
     <h1 class="site-title">Generations</h1>
     <p class="site-about">Documenting the Carson and Meier lineages; Preserving the stories and memories of the people who shaped us before they're lost to time.</p>
-    <span class="episode-count" id="episodeCount"></span>
   </header>
 
   <!-- ===== CAROUSEL ===== -->
@@ -992,6 +795,9 @@
       <button class="carousel-arrow" id="arrowRight" aria-label="Next episode">&#8250;</button>
     </div>
   </section>
+
+  <!-- ===== EPISODE COUNT (between carousel and feedback) ===== -->
+  <span class="episode-count" id="episodeCount"></span>
 
   <!-- ===== WATCHED INDICATOR TOGGLE ===== -->
   <div class="watched-bar" id="watchedBar" style="display:none;">
@@ -1010,38 +816,28 @@
   <div class="feedback-overlay" id="feedbackOverlay">
     <div class="feedback-panel" style="position:relative;">
       <button class="feedback-close" id="feedbackClose">&times;</button>
-
-      <!-- Form -->
       <div class="fb-form" id="fbForm">
         <div class="feedback-panel-title">Share Your Thoughts</div>
         <div class="feedback-panel-sub">Anonymous unless you add your name. Pick a category and write whatever comes to mind.</div>
-
         <div class="feedback-categories" id="fbCategories">
           <button class="fb-cat selected" data-cat="feedback">Feedback</button>
           <button class="fb-cat" data-cat="question">Question Suggestion</button>
           <button class="fb-cat" data-cat="story">Story / Memory</button>
           <button class="fb-cat" data-cat="correction">Correction</button>
         </div>
-
         <div class="fb-episode-row">
           <span class="fb-episode-label">About a specific episode? (optional)</span>
           <select class="fb-episode-select" id="fbEpisode">
             <option value="">General — all episodes</option>
-            <!-- Options populated by JS from episodes data -->
           </select>
         </div>
-
         <textarea class="fb-textarea" id="fbMessage" placeholder="What's on your mind?"></textarea>
-
         <div class="fb-name-row">
           <span class="fb-name-label">Your name (optional)</span>
           <input class="fb-name-input" id="fbName" type="text" placeholder="Anonymous">
         </div>
-
         <button class="fb-submit" id="fbSubmit" disabled>Send</button>
       </div>
-
-      <!-- Success state -->
       <div class="fb-success" id="fbSuccess">
         <div class="fb-success-icon">&#10003;</div>
         <div class="fb-success-text">Thank you</div>
@@ -1050,10 +846,10 @@
     </div>
   </div>
 
-  <!-- ===== MORPH BACKDROP (dims + blurs the page behind the viewer) ===== -->
+  <!-- ===== MORPH BACKDROP ===== -->
   <div class="morph-backdrop" id="morphBackdrop"></div>
 
-  <!-- ===== "Open in YouTube" link (appears below morphed viewer) ===== -->
+  <!-- ===== "Open in YouTube" link ===== -->
   <div class="morph-yt-link" id="morphYtLink">
     <a id="morphYtLinkAnchor" href="#" target="_blank">Open in YouTube ↗</a>
   </div>
@@ -1066,7 +862,7 @@
 const FORMSPREE_ID = 'xnjgbwqv';
 
 /* =======================================================
-   EPISODE DATA (edit this list to add/remove installments)
+   EPISODE DATA
    ======================================================= */
 const episodes = [
   {
@@ -1098,12 +894,13 @@ let currentVideoId = null;
 let progressInterval = null;
 let ytApiReady = false;
 
-/* The morph clone element currently on screen (null when not morphing) */
+/* Morph state */
 let morphClone = null;
-/* Stores the original card's bounding rect so we can reverse the animation */
 let morphOriginRect = null;
-/* The original card element that was cloned */
 let morphOriginCard = null;
+
+/* Track which card is currently "emphasized" (first-tap / hover state) */
+let emphasizedCard = null;
 
 function onYouTubeIframeAPIReady() {
   ytApiReady = true;
@@ -1117,7 +914,7 @@ function loadEpisodes() {
 }
 
 /* =======================================================
-   YOUTUBE THUMBNAIL WITH FALLBACK
+   YOUTUBE THUMBNAIL FALLBACK
    ======================================================= */
 function getYouTubeThumbs(videoId) {
   return [
@@ -1148,9 +945,7 @@ let progressData = {};
 function loadProgress() {
   try {
     const stored = localStorage.getItem('generations_progress');
-    if (stored) {
-      progressData = JSON.parse(stored);
-    }
+    if (stored) progressData = JSON.parse(stored);
   } catch (e) {}
 }
 
@@ -1164,15 +959,15 @@ function getProgress(videoId) {
   return progressData[videoId] || 0;
 }
 
-function setProgress(videoId, percentage) {
-  progressData[videoId] = Math.min(100, Math.max(0, percentage));
+function setProgress(videoId, pct) {
+  progressData[videoId] = Math.min(100, Math.max(0, pct));
   saveProgress();
 }
 
 function showWatchedBarIfNeeded() {
   const bar = document.getElementById('watchedBar');
-  const hasAnyProgress = Object.values(progressData).some(p => p > 0);
-  bar.style.display = hasAnyProgress ? 'block' : 'none';
+  const hasAny = Object.values(progressData).some(p => p > 0);
+  bar.style.display = hasAny ? 'block' : 'none';
 }
 
 function clearWatched() {
@@ -1184,31 +979,48 @@ function clearWatched() {
   showWatchedBarIfNeeded();
 }
 
+/* =======================================================
+   EMPHASIS — centered card activation
+   Only the centered card gets the "emphasized" class.
+   Mobile: first tap. Desktop: hover (centered only).
+   ======================================================= */
+function emphasizeCard(card) {
+  if (emphasizedCard === card) return;
+  deemphasizeAll();
+  card.classList.add('emphasized');
+  emphasizedCard = card;
+}
+
+function deemphasizeAll() {
+  if (emphasizedCard) {
+    emphasizedCard.classList.remove('emphasized');
+    emphasizedCard = null;
+  }
+}
+
 
 /* =======================================================
-   MORPH SYSTEM — Card-to-Viewer transition
+   MORPH SYSTEM — Card → Portrait 9:16 Viewer
 
-   morphToViewer(card, videoId):
-     1. Clones the card
-     2. Places clone at card's exact screen position (position: fixed)
-     3. On next frame, animates clone to portrait 9:16 centered on screen
-     4. Fades out the card-body (title/desc) during morph
-     5. Activates the backdrop (dim + blur)
-     6. After morph completes (~750ms), loads YouTube player
+   Timeline:
+     Frame 0:  Clone placed at card's exact position
+                Card body starts fading out (300ms)
+                Thumbnail starts fading to dark (500ms)
+                Backdrop starts dimming + blurring (800ms)
+                Clone morphs to portrait center (800ms)
+     +800ms:   Morph lands. Vignette + edge blur fade in (400ms)
+     +1200ms:  Everything settled. YouTube player loads & plays.
 
-   morphToCard():
-     1. Saves progress & destroys YouTube player
-     2. Reverse-animates clone back to original card position
-     3. After animation, removes clone from DOM
+   morphToCard() reverses everything.
    ======================================================= */
 
 function morphToViewer(card, videoId) {
-  if (morphClone) return; // already morphing
+  if (morphClone) return;
 
   currentVideoId = videoId;
   morphOriginCard = card;
 
-  // 1. Capture where the card is right now on screen
+  // 1. Snapshot the card's position on screen
   const rect = card.getBoundingClientRect();
   morphOriginRect = {
     top: rect.top,
@@ -1217,9 +1029,11 @@ function morphToViewer(card, videoId) {
     height: rect.height
   };
 
-  // 2. Clone the card
+  // 2. Clone the card (deep copy of its DOM)
   morphClone = card.cloneNode(true);
   morphClone.className = 'morph-viewer';
+
+  // Place the clone exactly where the card is
   morphClone.style.top = rect.top + 'px';
   morphClone.style.left = rect.left + 'px';
   morphClone.style.width = rect.width + 'px';
@@ -1227,24 +1041,22 @@ function morphToViewer(card, videoId) {
 
   document.body.appendChild(morphClone);
 
-  // 3. Hide the original card so we don't see it underneath
+  // 3. Hide the real card underneath
   card.style.visibility = 'hidden';
 
-  // 4. Calculate the portrait 9:16 target dimensions
-  //    On mobile: use ~85% viewport height; on desktop: ~75vh
+  // 4. Calculate target: portrait 9:16 centered on screen
   const isMobile = window.innerWidth < 768;
   const targetH = isMobile
     ? window.innerHeight * 0.82
     : window.innerHeight * 0.78;
-  const targetW = targetH * (9 / 16); // 9:16 aspect ratio
+  const targetW = targetH * (9 / 16);
   const targetTop = (window.innerHeight - targetH) / 2;
   const targetLeft = (window.innerWidth - targetW) / 2;
 
-  // 5. Activate backdrop
-  const backdrop = document.getElementById('morphBackdrop');
-  backdrop.classList.add('active');
+  // 5. Activate backdrop (dims + blurs the page behind)
+  document.getElementById('morphBackdrop').classList.add('active');
 
-  // 6. On next frame, set the target position → CSS transition does the rest
+  // 6. Double-rAF to ensure starting state paints, then trigger morph
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       morphClone.style.top = targetTop + 'px';
@@ -1255,27 +1067,33 @@ function morphToViewer(card, videoId) {
     });
   });
 
-  // 7. After morph completes, load YouTube
+  // 7. After morph lands (+800ms), add the edge blur overlay
+  setTimeout(() => {
+    if (!morphClone) return;
+    morphClone.classList.add('morph-blurred');
+  }, 800);
+
+  // 8. After ALL transitions done (+1200ms), load YouTube
   setTimeout(() => {
     if (!morphClone) return;
     const thumbDiv = morphClone.querySelector('.card-thumb');
     if (!thumbDiv) return;
 
-    // Set up the "Open in YouTube" link
+    // "Open in YouTube" link
     const ytLink = document.getElementById('morphYtLink');
     const ytAnchor = document.getElementById('morphYtLinkAnchor');
     ytAnchor.href = `https://www.youtube.com/watch?v=${videoId}`;
-
-    // Position the link below the viewer
     const cloneRect = morphClone.getBoundingClientRect();
     ytLink.style.left = '0';
     ytLink.style.right = '0';
     ytLink.style.top = (cloneRect.bottom + 14) + 'px';
     ytLink.classList.add('visible');
 
-    // Create YouTube player
+    // Create YouTube player inside the thumb area
     const playerDiv = document.createElement('div');
     playerDiv.id = 'morphYtPlayer_' + videoId;
+    // Give it explicit size so YT.Player renders correctly
+    playerDiv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;';
     thumbDiv.appendChild(playerDiv);
 
     if (ytApiReady && window.YT && window.YT.Player) {
@@ -1290,6 +1108,8 @@ function morphToViewer(card, videoId) {
 
       ytPlayers[videoId] = new YT.Player(playerDiv.id, {
         videoId: videoId,
+        width: '100%',
+        height: '100%',
         playerVars: {
           autoplay: 1,
           modestbranding: 1,
@@ -1303,7 +1123,7 @@ function morphToViewer(card, videoId) {
         }
       });
     } else {
-      // Fallback: plain iframe if YT API isn't loaded
+      // Fallback: plain iframe
       const iframe = document.createElement('iframe');
       iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&modestbranding=1&rel=0&playsinline=1`;
       iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
@@ -1313,7 +1133,7 @@ function morphToViewer(card, videoId) {
     }
 
     startProgressTracking(videoId);
-  }, 750); // wait for morph animation to finish
+  }, 1200);
 }
 
 
@@ -1322,7 +1142,7 @@ function morphToCard() {
 
   const videoId = currentVideoId;
 
-  // 1. Save progress & destroy player
+  // Save progress & destroy player
   if (videoId && ytPlayers[videoId]) {
     try {
       const player = ytPlayers[videoId];
@@ -1340,35 +1160,30 @@ function morphToCard() {
   stopProgressTracking();
   showWatchedBarIfNeeded();
 
-  // 2. Hide the YouTube link
-  const ytLink = document.getElementById('morphYtLink');
-  ytLink.classList.remove('visible');
+  // Hide YouTube link
+  document.getElementById('morphYtLink').classList.remove('visible');
 
-  // 3. Deactivate backdrop
-  const backdrop = document.getElementById('morphBackdrop');
-  backdrop.classList.remove('active');
+  // Deactivate backdrop
+  document.getElementById('morphBackdrop').classList.remove('active');
 
-  // 4. Remove the 'morphed' class so card-body fades back in
+  // Remove blur overlay + morphed state → card-body fades back in
+  morphClone.classList.remove('morph-blurred');
   morphClone.classList.remove('morphed');
 
-  // 5. Animate clone back to original card position
+  // Animate clone back to card's original position
   morphClone.style.top = morphOriginRect.top + 'px';
   morphClone.style.left = morphOriginRect.left + 'px';
   morphClone.style.width = morphOriginRect.width + 'px';
   morphClone.style.height = morphOriginRect.height + 'px';
 
-  // 6. After reverse animation, clean up
+  // After reverse animation, remove clone and restore real card
   const clone = morphClone;
   const originCard = morphOriginCard;
 
   setTimeout(() => {
-    if (clone && clone.parentNode) {
-      clone.parentNode.removeChild(clone);
-    }
-    if (originCard) {
-      originCard.style.visibility = '';
-    }
-  }, 750);
+    if (clone && clone.parentNode) clone.parentNode.removeChild(clone);
+    if (originCard) originCard.style.visibility = '';
+  }, 850);
 
   morphClone = null;
   morphOriginRect = null;
@@ -1403,7 +1218,7 @@ function stopProgressTracking() {
 }
 
 function onPlayerReady(event) {
-  // Player is ready — sound should be ON by default (no mute call)
+  // Player ready — sound ON by default
 }
 
 function onPlayerStateChange(event) {
@@ -1413,11 +1228,7 @@ function onPlayerStateChange(event) {
       setProgress(videoId, 100);
       updateProgressBar(videoId);
       updateCardWatchedState(videoId);
-
-      // Graceful exit: pause, then slowly close the viewer
-      setTimeout(() => {
-        morphToCard();
-      }, 2000); // 2-second pause after video ends
+      setTimeout(() => morphToCard(), 2000);
     }
   }
 }
@@ -1427,24 +1238,20 @@ function updateProgressBar(videoId) {
   if (card) {
     const bar = card.querySelector('.card-progress-bar');
     if (bar) {
-      const percentage = getProgress(videoId);
-      bar.style.width = `${percentage}%`;
-      if (percentage > 0) {
-        bar.style.display = 'block';
-      }
+      const pct = getProgress(videoId);
+      bar.style.width = `${pct}%`;
+      if (pct > 0) bar.style.display = 'block';
     }
   }
 }
 
 function updateCardWatchedState(videoId) {
   const card = document.querySelector(`[data-youtube="${videoId}"]`);
-  if (card) {
-    const progress = getProgress(videoId);
-    if (progress >= 100) {
-      card.classList.add('watched');
-    }
+  if (card && getProgress(videoId) >= 100) {
+    card.classList.add('watched');
   }
 }
+
 
 /* =======================================================
    RENDER CARDS
@@ -1463,11 +1270,9 @@ function renderCards() {
     card.dataset.title = ep.title;
 
     const progress = getProgress(ep.youtube);
-    if (progress >= 100) {
-      card.classList.add('watched');
-    }
+    if (progress >= 100) card.classList.add('watched');
 
-    /* ---- MOBILE TOUCH HANDLING ---- */
+    /* ---- MOBILE TOUCH ---- */
     if (isMobile) {
       let touchStartX = 0;
       let touchStartY = 0;
@@ -1482,76 +1287,55 @@ function renderCards() {
       card.addEventListener('touchmove', (e) => {
         const dx = Math.abs(e.touches[0].clientX - touchStartX);
         const dy = Math.abs(e.touches[0].clientY - touchStartY);
-        if (dx > 15 || dy > 15) {
-          isSwiping = true;
-        }
+        if (dx > 15 || dy > 15) isSwiping = true;
       }, { passive: true });
 
       card.addEventListener('touchend', (e) => {
         if (isSwiping) return;
         e.preventDefault();
 
-        // If this card is NOT the centered card, scroll it to center first
+        // Not the centered card? Scroll it to center, nothing else.
         if (i !== currentIndex) {
           scrollToIndex(i);
           return;
         }
 
-        // This IS the centered card — morph it into the viewer
-        morphToViewer(card, ep.youtube);
+        // Centered card: two-tap flow
+        if (!card.classList.contains('emphasized')) {
+          // FIRST TAP → emphasize (scale up, rise, glow)
+          emphasizeCard(card);
+        } else {
+          // SECOND TAP → morph into viewer
+          deemphasizeAll();
+          morphToViewer(card, ep.youtube);
+        }
       });
     }
 
-    /* ---- DESKTOP MOUSE HANDLING ---- */
+    /* ---- DESKTOP MOUSE ---- */
     if (!isMobile) {
-      let hoverTimeout = null;
-      let previewIframe = null;
-
+      // Hover emphasis — only if this is the centered card
       card.addEventListener('mouseenter', function() {
-        hoverTimeout = setTimeout(() => {
-          const thumb = card.querySelector('.card-thumb');
-          if (thumb && !previewIframe) {
-            previewIframe = document.createElement('iframe');
-            previewIframe.src = `https://www.youtube.com/embed/${ep.youtube}?autoplay=1&mute=1&start=30&showinfo=0&modestbranding=1&enablejsapi=1`;
-            previewIframe.allow = 'autoplay; encrypted-media';
-            const img = thumb.querySelector('img');
-            if (img) img.style.opacity = '0';
-            thumb.appendChild(previewIframe);
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                previewIframe.classList.add('preview-visible');
-              });
-            });
-          }
-        }, 1500);
+        if (i === currentIndex) {
+          emphasizeCard(card);
+        }
       });
 
       card.addEventListener('mouseleave', function() {
-        clearTimeout(hoverTimeout);
-        if (previewIframe) {
-          previewIframe.classList.remove('preview-visible');
-          const iframe = previewIframe;
-          previewIframe = null;
-          setTimeout(() => iframe.remove(), 400);
-          const img = card.querySelector('.card-thumb img');
-          if (img) img.style.opacity = '1';
-        }
+        deemphasizeAll();
+        card.style.transform = '';
+        card.classList.remove('tilt');
       });
 
-      card.addEventListener('click', (e) => {
-        // Kill any hover preview before morphing
-        clearTimeout(hoverTimeout);
-        if (previewIframe) {
-          previewIframe.remove();
-          previewIframe = null;
-          const img = card.querySelector('.card-thumb img');
-          if (img) img.style.opacity = '1';
-        }
+      // Single click → morph (hover already provided emphasis step)
+      card.addEventListener('click', () => {
+        deemphasizeAll();
         morphToViewer(card, ep.youtube);
       });
 
-      // 3D tilt effect on mouse move
+      // 3D tilt on mouse move — only for centered card
       card.addEventListener('mousemove', function(e) {
+        if (i !== currentIndex) return;
         const rect = card.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
@@ -1561,11 +1345,6 @@ function renderCards() {
         const rotateY = (mouseX / rect.width) * -5;
         card.style.transform = `scale(1.04) translateY(-8px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
         card.classList.add('tilt');
-      });
-
-      card.addEventListener('mouseleave', function() {
-        card.style.transform = '';
-        card.classList.remove('tilt');
       });
     }
 
@@ -1580,32 +1359,25 @@ function renderCards() {
     if (ep.image && ep.image.length > 0) {
       img.src = ep.image;
       img.onload = () => img.classList.remove('loading');
-      img.onerror = () => {
-        loadThumbnail(img, getYouTubeThumbs(ep.youtube), 0);
-      };
+      img.onerror = () => loadThumbnail(img, getYouTubeThumbs(ep.youtube), 0);
     } else {
       loadThumbnail(img, getYouTubeThumbs(ep.youtube), 0);
     }
 
-    // Duration pill
     const durationPill = document.createElement('div');
     durationPill.className = 'card-duration';
     durationPill.textContent = ep.duration;
 
-    // Progress bar
     const progressBar = document.createElement('div');
     progressBar.className = 'card-progress-bar';
-    const percentage = getProgress(ep.youtube);
-    progressBar.style.width = `${percentage}%`;
-    if (percentage > 0) {
-      progressBar.style.display = 'block';
-    }
+    const pct = getProgress(ep.youtube);
+    progressBar.style.width = `${pct}%`;
+    if (pct > 0) progressBar.style.display = 'block';
 
     thumbDiv.appendChild(img);
     thumbDiv.appendChild(durationPill);
     thumbDiv.appendChild(progressBar);
 
-    // Body
     const body = document.createElement('div');
     body.className = 'card-body';
 
@@ -1619,7 +1391,6 @@ function renderCards() {
 
     body.appendChild(title);
     body.appendChild(desc);
-
     card.appendChild(thumbDiv);
     card.appendChild(body);
     track.appendChild(card);
@@ -1657,6 +1428,9 @@ function scrollToIndex(idx) {
   if (idx >= episodes.length) idx = episodes.length - 1;
   currentIndex = idx;
 
+  // Clear any emphasis when scrolling
+  deemphasizeAll();
+
   if (scrollAnimationId !== null) {
     cancelAnimationFrame(scrollAnimationId);
     scrollAnimationId = null;
@@ -1683,7 +1457,6 @@ function scrollToIndex(idx) {
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / SCROLL_DURATION, 1);
       const easedProgress = easeInOutCubic(progress);
-
       track.scrollLeft = startPos + (distance * easedProgress);
 
       if (progress < 1) {
@@ -1712,20 +1485,22 @@ track.addEventListener('scroll', () => {
   scrollTimeout = setTimeout(() => {
     const cardWidth = getCardWidth();
     if (cardWidth > 0) {
-      currentIndex = Math.round(track.scrollLeft / cardWidth);
+      const newIndex = Math.round(track.scrollLeft / cardWidth);
+      if (newIndex !== currentIndex) {
+        deemphasizeAll();
+      }
+      currentIndex = newIndex;
       updateArrows();
     }
   }, 80);
 });
 
 /* =======================================================
-   KEYBOARD CONTROLS
+   KEYBOARD
    ======================================================= */
 document.addEventListener('keydown', (e) => {
-  // Don't handle arrow keys when feedback overlay or morph viewer is open
   if (document.getElementById('feedbackOverlay').classList.contains('open')) return;
   if (morphClone) {
-    // Escape closes the morph viewer
     if (e.key === 'Escape') morphToCard();
     return;
   }
@@ -1737,11 +1512,7 @@ document.addEventListener('keydown', (e) => {
    MORPH VIEWER CONTROLS
    ======================================================= */
 document.getElementById('watchedToggle').addEventListener('click', clearWatched);
-
-// Clicking the backdrop closes the morph viewer
-document.getElementById('morphBackdrop').addEventListener('click', () => {
-  morphToCard();
-});
+document.getElementById('morphBackdrop').addEventListener('click', () => morphToCard());
 
 /* =======================================================
    FEEDBACK PANEL
@@ -1794,7 +1565,6 @@ document.querySelectorAll('.fb-cat').forEach(btn => {
     document.querySelectorAll('.fb-cat').forEach(b => b.classList.remove('selected'));
     btn.classList.add('selected');
     selectedCategory = btn.dataset.cat;
-
     const placeholders = {
       feedback: "What's on your mind?",
       question: "What question should we ask in a future interview?",
@@ -1851,7 +1621,6 @@ fbSubmit.addEventListener('click', async () => {
   fbForm.classList.add('hidden');
   fbSuccess.classList.add('show');
   fbSubmit.textContent = 'Send';
-
   setTimeout(closeFeedback, 2200);
 });
 
@@ -1863,11 +1632,6 @@ loadEpisodes();
 
 /* =======================================================
    ENTRANCE CHOREOGRAPHY
-   Runs on EVERY page load:
-     0ms    → Title fades in (1s)
-     1000ms → About fades in (700ms)
-     1700ms → Meta bar fades in (500ms)
-     2200ms → Cards slide up (700ms each, 1s stagger)
    ======================================================= */
 (function runEntrance() {
   const title = document.querySelector('.site-title');
@@ -1878,13 +1642,8 @@ loadEpisodes();
   const arrowsDiv = document.getElementById('carouselArrows');
   const cards = document.querySelectorAll('.card');
 
-  setTimeout(() => {
-    if (title) title.classList.add('entrance-visible');
-  }, 50);
-
-  setTimeout(() => {
-    if (about) about.classList.add('entrance-visible');
-  }, 1000);
+  setTimeout(() => { if (title) title.classList.add('entrance-visible'); }, 50);
+  setTimeout(() => { if (about) about.classList.add('entrance-visible'); }, 1000);
 
   setTimeout(() => {
     if (count) count.classList.add('entrance-visible');
