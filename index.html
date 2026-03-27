@@ -237,7 +237,140 @@
     border-color: var(--accent);
   }
 
+  /* =======================================================
+     MORPH SYSTEM
+     When the user taps/clicks the centered card, a clone of
+     the card floats out of the carousel (position: fixed) and
+     morphs into a portrait 9:16 viewer centered on screen.
 
+     How it works:
+     1. Clone is created at the card's exact screen position
+     2. CSS transition animates it to center + portrait shape
+     3. .card-body inside the clone fades out during morph
+     4. Backdrop dims + blurs behind it
+     5. YouTube iframe loads after morph completes
+     6. Closing reverses the process
+     ======================================================= */
+  .morph-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(12, 10, 8, 0);
+    backdrop-filter: blur(0px);
+    z-index: 2000;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 700ms ease-in-out;
+  }
+
+  .morph-backdrop.active {
+    background: rgba(12, 10, 8, 0.75);
+    backdrop-filter: blur(10px);
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .morph-viewer {
+    position: fixed;
+    z-index: 2001;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    /* This transition drives the entire morph animation */
+    transition: top 700ms ease-in-out,
+                left 700ms ease-in-out,
+                width 700ms ease-in-out,
+                height 700ms ease-in-out,
+                border-color 700ms ease-in-out,
+                box-shadow 700ms ease-in-out;
+  }
+
+  .morph-viewer .card-body {
+    transition: opacity 400ms ease-out, max-height 500ms ease-in-out;
+    overflow: hidden;
+  }
+
+  .morph-viewer.morphed .card-body {
+    opacity: 0;
+    max-height: 0;
+    padding: 0;
+  }
+
+  .morph-viewer.morphed {
+    border-color: transparent;
+    /* Vignette blur: soft dark edges blending into the backdrop */
+    box-shadow:
+      inset 0 0 40px 15px rgba(0, 0, 0, 0.7),
+      0 0 80px rgba(0, 0, 0, 0.6),
+      0 0 160px rgba(0, 0, 0, 0.3);
+  }
+
+  .morph-viewer .card-thumb {
+    width: 100%;
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #4a3a28, #302518);
+  }
+
+  .morph-viewer .card-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: opacity 600ms ease-out;
+  }
+
+  .morph-viewer.morphed .card-thumb img {
+    opacity: 0;
+  }
+
+  .morph-viewer .card-thumb iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 0;
+  }
+
+  .morph-viewer .card-duration {
+    display: none;
+  }
+
+  .morph-viewer .card-progress-bar {
+    display: none;
+  }
+
+  /* "Open in YouTube" link below the morphed viewer */
+  .morph-yt-link {
+    position: fixed;
+    z-index: 2002;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 500ms ease-out;
+    pointer-events: none;
+  }
+
+  .morph-yt-link.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .morph-yt-link a {
+    color: var(--text-cream);
+    text-decoration: none;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 0.82rem;
+    letter-spacing: 0.03em;
+    transition: color 0.2s;
+  }
+
+  .morph-yt-link a:hover {
+    color: var(--accent);
+  }
 
   /* Watched state — progress bar at bottom */
   .card.watched .card-progress-bar {
@@ -709,114 +842,6 @@
   }
 
   /* =======================================================
-     VIDEO PLAYER MODAL — PORTRAIT 9:16 VIEWER
-     Centered on screen. Vignette blur edges.
-     Mobile: fills ~80% of viewport height.
-     Desktop: appropriately sized portrait rectangle.
-     ======================================================= */
-  .video-modal {
-    position: fixed;
-    inset: 0;
-    background: rgba(12, 10, 8, 0);
-    backdrop-filter: blur(0px);
-    z-index: 2000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    visibility: hidden;
-    transition:
-      opacity var(--viewer-backdrop-speed) ease-in-out,
-      background var(--viewer-backdrop-speed) ease-in-out,
-      backdrop-filter var(--viewer-backdrop-speed) ease-in-out,
-      visibility var(--viewer-backdrop-speed);
-  }
-
-  .video-modal.open {
-    opacity: 1;
-    visibility: visible;
-    background: rgba(12, 10, 8, 0.75);
-    backdrop-filter: blur(10px);
-  }
-
-  .video-modal-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
-    /* Subtle scale-up entrance */
-    transform: scale(0.88);
-    transition: transform var(--viewer-morph-speed) var(--viewer-morph-easing);
-  }
-
-  .video-modal.open .video-modal-content {
-    transform: scale(1);
-  }
-
-  /* Portrait player container — 9:16 aspect ratio */
-  .video-player-container {
-    position: relative;
-    width: 45vh;  /* Width derived from height to maintain 9:16 */
-    height: 80vh;
-    max-width: 90vw;
-    max-height: 85vh;
-    overflow: hidden;
-    border-radius: var(--radius);
-    /* Vignette blur effect — soft edge glow */
-    box-shadow:
-      inset 0 0 30px 10px rgba(0, 0, 0, 0.6),
-      0 0 60px rgba(0, 0, 0, 0.5),
-      0 0 120px rgba(0, 0, 0, 0.3);
-  }
-
-  .video-player-container iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border: none;
-    border-radius: var(--radius);
-  }
-
-  .video-modal-close {
-    position: absolute;
-    top: -44px;
-    right: -4px;
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    font-size: 2rem;
-    cursor: pointer;
-    padding: 4px 8px;
-    line-height: 1;
-    transition: color 0.2s;
-    z-index: 10;
-  }
-
-  .video-modal-close:hover {
-    color: var(--text-cream);
-  }
-
-  .video-modal-link {
-    text-align: center;
-    margin-top: 16px;
-    font-size: 0.82rem;
-  }
-
-  .video-modal-link a {
-    color: var(--text-cream);
-    text-decoration: none;
-    transition: color 0.2s;
-    font-family: 'Playfair Display', Georgia, serif;
-    letter-spacing: 0.03em;
-  }
-
-  .video-modal-link a:hover {
-    color: var(--accent);
-  }
-
-  /* =======================================================
      DESKTOP OVERRIDES (>= 768px)
      ======================================================= */
   @media (min-width: 768px) {
@@ -866,12 +891,6 @@
     .feedback-panel {
       border-radius: var(--radius);
       max-height: 70vh;
-    }
-
-    /* Desktop viewer: slightly smaller, well-centered */
-    .video-player-container {
-      width: 40vh;
-      height: 75vh;
     }
   }
 
@@ -949,12 +968,6 @@
 
     .site-title { font-size: 1.8rem; }
     .card-title { font-size: 1rem; }
-
-    .video-player-container {
-      width: 50vh;
-      height: 80vh;
-      max-width: 92vw;
-    }
   }
 </style>
 </head>
@@ -1037,17 +1050,12 @@
     </div>
   </div>
 
-  <!-- ===== VIDEO PLAYER MODAL (Portrait 9:16 Viewer) ===== -->
-  <div class="video-modal" id="videoModal">
-    <div class="video-modal-content">
-      <button class="video-modal-close" id="videoModalClose">&times;</button>
-      <div class="video-player-container" id="videoPlayerContainer">
-        <!-- YouTube iframe injected by JS -->
-      </div>
-      <div class="video-modal-link">
-        <a id="videoYouTubeLink" href="#" target="_blank">Open in YouTube ↗</a>
-      </div>
-    </div>
+  <!-- ===== MORPH BACKDROP (dims + blurs the page behind the viewer) ===== -->
+  <div class="morph-backdrop" id="morphBackdrop"></div>
+
+  <!-- ===== "Open in YouTube" link (appears below morphed viewer) ===== -->
+  <div class="morph-yt-link" id="morphYtLink">
+    <a id="morphYtLinkAnchor" href="#" target="_blank">Open in YouTube ↗</a>
   </div>
 
 
@@ -1090,6 +1098,12 @@ let currentVideoId = null;
 let progressInterval = null;
 let ytApiReady = false;
 
+/* The morph clone element currently on screen (null when not morphing) */
+let morphClone = null;
+/* Stores the original card's bounding rect so we can reverse the animation */
+let morphOriginRect = null;
+/* The original card element that was cloned */
+let morphOriginCard = null;
 
 function onYouTubeIframeAPIReady() {
   ytApiReady = true;
@@ -1172,97 +1186,196 @@ function clearWatched() {
 
 
 /* =======================================================
-   VIDEO MODAL (Portrait 9:16 Viewer)
+   MORPH SYSTEM — Card-to-Viewer transition
+
+   morphToViewer(card, videoId):
+     1. Clones the card
+     2. Places clone at card's exact screen position (position: fixed)
+     3. On next frame, animates clone to portrait 9:16 centered on screen
+     4. Fades out the card-body (title/desc) during morph
+     5. Activates the backdrop (dim + blur)
+     6. After morph completes (~750ms), loads YouTube player
+
+   morphToCard():
+     1. Saves progress & destroys YouTube player
+     2. Reverse-animates clone back to original card position
+     3. After animation, removes clone from DOM
    ======================================================= */
-const videoModal = document.getElementById('videoModal');
-const videoModalClose = document.getElementById('videoModalClose');
-const videoPlayerContainer = document.getElementById('videoPlayerContainer');
-const videoYouTubeLink = document.getElementById('videoYouTubeLink');
 
-function openVideoModal(videoId) {
+function morphToViewer(card, videoId) {
+  if (morphClone) return; // already morphing
+
   currentVideoId = videoId;
-  videoYouTubeLink.href = `https://www.youtube.com/watch?v=${videoId}`;
+  morphOriginCard = card;
 
-  // Clear any previous player
-  videoPlayerContainer.innerHTML = '';
-  if (ytPlayers[videoId]) {
-    try { ytPlayers[videoId].destroy(); } catch(e) {}
-    delete ytPlayers[videoId];
-  }
+  // 1. Capture where the card is right now on screen
+  const rect = card.getBoundingClientRect();
+  morphOriginRect = {
+    top: rect.top,
+    left: rect.left,
+    width: rect.width,
+    height: rect.height
+  };
 
-  const playerDiv = document.createElement('div');
-  playerDiv.id = 'ytPlayer_' + videoId;
-  videoPlayerContainer.appendChild(playerDiv);
+  // 2. Clone the card
+  morphClone = card.cloneNode(true);
+  morphClone.className = 'morph-viewer';
+  morphClone.style.top = rect.top + 'px';
+  morphClone.style.left = rect.left + 'px';
+  morphClone.style.width = rect.width + 'px';
+  morphClone.style.height = rect.height + 'px';
 
-  if (ytApiReady && window.YT && window.YT.Player) {
-    const savedProgress = getProgress(videoId);
-    const ep = episodes.find(e => e.youtube === videoId);
-    let startSeconds = 0;
-    if (savedProgress > 0 && savedProgress < 100 && ep && ep.duration) {
-      const parts = ep.duration.split(':').map(Number);
-      const totalSec = parts.length === 2 ? parts[0] * 60 + parts[1] : parts[0] * 3600 + parts[1] * 60 + (parts[2] || 0);
-      startSeconds = Math.floor((savedProgress / 100) * totalSec);
+  document.body.appendChild(morphClone);
+
+  // 3. Hide the original card so we don't see it underneath
+  card.style.visibility = 'hidden';
+
+  // 4. Calculate the portrait 9:16 target dimensions
+  //    On mobile: use ~85% viewport height; on desktop: ~75vh
+  const isMobile = window.innerWidth < 768;
+  const targetH = isMobile
+    ? window.innerHeight * 0.82
+    : window.innerHeight * 0.78;
+  const targetW = targetH * (9 / 16); // 9:16 aspect ratio
+  const targetTop = (window.innerHeight - targetH) / 2;
+  const targetLeft = (window.innerWidth - targetW) / 2;
+
+  // 5. Activate backdrop
+  const backdrop = document.getElementById('morphBackdrop');
+  backdrop.classList.add('active');
+
+  // 6. On next frame, set the target position → CSS transition does the rest
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      morphClone.style.top = targetTop + 'px';
+      morphClone.style.left = targetLeft + 'px';
+      morphClone.style.width = targetW + 'px';
+      morphClone.style.height = targetH + 'px';
+      morphClone.classList.add('morphed');
+    });
+  });
+
+  // 7. After morph completes, load YouTube
+  setTimeout(() => {
+    if (!morphClone) return;
+    const thumbDiv = morphClone.querySelector('.card-thumb');
+    if (!thumbDiv) return;
+
+    // Set up the "Open in YouTube" link
+    const ytLink = document.getElementById('morphYtLink');
+    const ytAnchor = document.getElementById('morphYtLinkAnchor');
+    ytAnchor.href = `https://www.youtube.com/watch?v=${videoId}`;
+
+    // Position the link below the viewer
+    const cloneRect = morphClone.getBoundingClientRect();
+    ytLink.style.left = '0';
+    ytLink.style.right = '0';
+    ytLink.style.top = (cloneRect.bottom + 14) + 'px';
+    ytLink.classList.add('visible');
+
+    // Create YouTube player
+    const playerDiv = document.createElement('div');
+    playerDiv.id = 'morphYtPlayer_' + videoId;
+    thumbDiv.appendChild(playerDiv);
+
+    if (ytApiReady && window.YT && window.YT.Player) {
+      const savedProgress = getProgress(videoId);
+      const ep = episodes.find(e => e.youtube === videoId);
+      let startSeconds = 0;
+      if (savedProgress > 0 && savedProgress < 95 && ep && ep.duration) {
+        const parts = ep.duration.split(':').map(Number);
+        const totalSec = parts.length === 2 ? parts[0] * 60 + parts[1] : parts[0] * 3600 + parts[1] * 60 + (parts[2] || 0);
+        startSeconds = Math.floor((savedProgress / 100) * totalSec);
+      }
+
+      ytPlayers[videoId] = new YT.Player(playerDiv.id, {
+        videoId: videoId,
+        playerVars: {
+          autoplay: 1,
+          modestbranding: 1,
+          rel: 0,
+          start: startSeconds,
+          playsinline: 1
+        },
+        events: {
+          onReady: onPlayerReady,
+          onStateChange: onPlayerStateChange
+        }
+      });
+    } else {
+      // Fallback: plain iframe if YT API isn't loaded
+      const iframe = document.createElement('iframe');
+      iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&modestbranding=1&rel=0&playsinline=1`;
+      iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+      iframe.allowFullscreen = true;
+      iframe.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;';
+      thumbDiv.appendChild(iframe);
     }
 
-    ytPlayers[videoId] = new YT.Player(playerDiv.id, {
-      videoId: videoId,
-      playerVars: {
-        autoplay: 1,
-        modestbranding: 1,
-        rel: 0,
-        start: startSeconds,
-        playsinline: 1
-      },
-      events: {
-        onReady: onPlayerReady,
-        onStateChange: onPlayerStateChange
-      }
-    });
-  } else {
-    const iframe = document.createElement('iframe');
-    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&modestbranding=1&rel=0&playsinline=1`;
-    iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
-    iframe.allowFullscreen = true;
-    iframe.style.width = '100%';
-    iframe.style.height = '100%';
-    iframe.style.border = 'none';
-    iframe.style.borderRadius = '12px';
-    videoPlayerContainer.innerHTML = '';
-    videoPlayerContainer.appendChild(iframe);
-  }
-
-  videoModal.classList.add('open');
-  startProgressTracking(videoId);
+    startProgressTracking(videoId);
+  }, 750); // wait for morph animation to finish
 }
 
-function closeVideoModal() {
-  if (currentVideoId && ytPlayers[currentVideoId]) {
+
+function morphToCard() {
+  if (!morphClone || !morphOriginRect) return;
+
+  const videoId = currentVideoId;
+
+  // 1. Save progress & destroy player
+  if (videoId && ytPlayers[videoId]) {
     try {
-      const player = ytPlayers[currentVideoId];
+      const player = ytPlayers[videoId];
       const current = player.getCurrentTime();
       const duration = player.getDuration();
       if (duration > 0) {
-        setProgress(currentVideoId, (current / duration) * 100);
-        updateProgressBar(currentVideoId);
+        setProgress(videoId, (current / duration) * 100);
+        updateProgressBar(videoId);
       }
       player.destroy();
     } catch(e) {}
-    delete ytPlayers[currentVideoId];
+    delete ytPlayers[videoId];
   }
 
-  // Also show the "Clear watched history" bar immediately if needed
+  stopProgressTracking();
   showWatchedBarIfNeeded();
 
-  videoModal.classList.remove('open');
-  stopProgressTracking();
-  currentVideoId = null;
+  // 2. Hide the YouTube link
+  const ytLink = document.getElementById('morphYtLink');
+  ytLink.classList.remove('visible');
 
-  // Wait for fade-out, then clear the iframe
-  const closeSpeed = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--viewer-close-speed')) || 800;
+  // 3. Deactivate backdrop
+  const backdrop = document.getElementById('morphBackdrop');
+  backdrop.classList.remove('active');
+
+  // 4. Remove the 'morphed' class so card-body fades back in
+  morphClone.classList.remove('morphed');
+
+  // 5. Animate clone back to original card position
+  morphClone.style.top = morphOriginRect.top + 'px';
+  morphClone.style.left = morphOriginRect.left + 'px';
+  morphClone.style.width = morphOriginRect.width + 'px';
+  morphClone.style.height = morphOriginRect.height + 'px';
+
+  // 6. After reverse animation, clean up
+  const clone = morphClone;
+  const originCard = morphOriginCard;
+
   setTimeout(() => {
-    videoPlayerContainer.innerHTML = '';
-  }, closeSpeed);
+    if (clone && clone.parentNode) {
+      clone.parentNode.removeChild(clone);
+    }
+    if (originCard) {
+      originCard.style.visibility = '';
+    }
+  }, 750);
+
+  morphClone = null;
+  morphOriginRect = null;
+  morphOriginCard = null;
+  currentVideoId = null;
 }
+
 
 function startProgressTracking(videoId) {
   stopProgressTracking();
@@ -1273,8 +1386,8 @@ function startProgressTracking(videoId) {
         const current = player.getCurrentTime();
         const duration = player.getDuration();
         if (duration > 0) {
-          const percentage = (current / duration) * 100;
-          setProgress(videoId, percentage);
+          const pct = (current / duration) * 100;
+          setProgress(videoId, pct);
           updateProgressBar(videoId);
         }
       } catch (e) {}
@@ -1303,7 +1416,7 @@ function onPlayerStateChange(event) {
 
       // Graceful exit: pause, then slowly close the viewer
       setTimeout(() => {
-        closeVideoModal();
+        morphToCard();
       }, 2000); // 2-second pause after video ends
     }
   }
@@ -1316,9 +1429,6 @@ function updateProgressBar(videoId) {
     if (bar) {
       const percentage = getProgress(videoId);
       bar.style.width = `${percentage}%`;
-      // INSTANT UPDATE: Make the bar visible as soon as there's any
-      // progress. Without this, the bar stays hidden (display:none)
-      // until the page reloads and renderCards() runs again.
       if (percentage > 0) {
         bar.style.display = 'block';
       }
@@ -1357,6 +1467,7 @@ function renderCards() {
       card.classList.add('watched');
     }
 
+    /* ---- MOBILE TOUCH HANDLING ---- */
     if (isMobile) {
       let touchStartX = 0;
       let touchStartY = 0;
@@ -1379,11 +1490,19 @@ function renderCards() {
       card.addEventListener('touchend', (e) => {
         if (isSwiping) return;
         e.preventDefault();
-        // Single tap opens the portrait viewer directly
-        openVideoModal(ep.youtube);
+
+        // If this card is NOT the centered card, scroll it to center first
+        if (i !== currentIndex) {
+          scrollToIndex(i);
+          return;
+        }
+
+        // This IS the centered card — morph it into the viewer
+        morphToViewer(card, ep.youtube);
       });
     }
 
+    /* ---- DESKTOP MOUSE HANDLING ---- */
     if (!isMobile) {
       let hoverTimeout = null;
       let previewIframe = null;
@@ -1420,6 +1539,7 @@ function renderCards() {
       });
 
       card.addEventListener('click', (e) => {
+        // Kill any hover preview before morphing
         clearTimeout(hoverTimeout);
         if (previewIframe) {
           previewIframe.remove();
@@ -1427,7 +1547,7 @@ function renderCards() {
           const img = card.querySelector('.card-thumb img');
           if (img) img.style.opacity = '1';
         }
-        openVideoModal(ep.youtube);
+        morphToViewer(card, ep.youtube);
       });
 
       // 3D tilt effect on mouse move
@@ -1598,28 +1718,29 @@ track.addEventListener('scroll', () => {
   }, 80);
 });
 
+/* =======================================================
+   KEYBOARD CONTROLS
+   ======================================================= */
 document.addEventListener('keydown', (e) => {
+  // Don't handle arrow keys when feedback overlay or morph viewer is open
   if (document.getElementById('feedbackOverlay').classList.contains('open')) return;
-  if (videoModal.classList.contains('open')) return;
+  if (morphClone) {
+    // Escape closes the morph viewer
+    if (e.key === 'Escape') morphToCard();
+    return;
+  }
   if (e.key === 'ArrowLeft') scrollToIndex(currentIndex - 1);
   if (e.key === 'ArrowRight') scrollToIndex(currentIndex + 1);
 });
 
 /* =======================================================
-   VIDEO MODAL CONTROLS
+   MORPH VIEWER CONTROLS
    ======================================================= */
-videoModalClose.addEventListener('click', closeVideoModal);
 document.getElementById('watchedToggle').addEventListener('click', clearWatched);
 
-videoModal.addEventListener('click', (e) => {
-  // Clicking the backdrop (outside the content) closes the viewer
-  if (e.target === videoModal) closeVideoModal();
-});
-
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && videoModal.classList.contains('open')) {
-    closeVideoModal();
-  }
+// Clicking the backdrop closes the morph viewer
+document.getElementById('morphBackdrop').addEventListener('click', () => {
+  morphToCard();
 });
 
 /* =======================================================
