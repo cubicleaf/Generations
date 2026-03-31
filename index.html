@@ -6,15 +6,20 @@
 <title>Generations</title>
 
 <meta property="og:title" content="Generations">
-<meta property="og:description" content="Documenting the Carson and Meier lineages; Preserving the stories and memories of the people who shaped us before they're lost to time.">
+<meta property="og:description" content="Documenting the Carson and Meier lineages — preserving the stories and memories of the people who shaped us before they're lost to time.">
 <meta property="og:image" content="https://projectgenerations.netlify.app/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:type" content="image/png">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://projectgenerations.netlify.app/">
+<meta property="og:site_name" content="Generations">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Generations">
 <meta name="twitter:description" content="Documenting the Carson and Meier lineages">
 <meta name="twitter:image" content="https://projectgenerations.netlify.app/og-image.png">
-<meta name="description" content="Documenting the Carson and Meier lineages; Preserving the stories and memories of the people who shaped us before they're lost to time.">
+<meta name="description" content="Documenting the Carson and Meier lineages — preserving the stories and memories of the people who shaped us before they're lost to time.">
+<link rel="apple-touch-icon" href="og-image.png">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
@@ -167,31 +172,41 @@
     transform: none !important;
   }
 
-  /* When morph target is reached: fade card contents to dark */
+  /* When morph-active is added: ALL card contents PURELY FADE OUT.
+     No max-height collapse, no padding change, no spatial movement.
+     The text just becomes invisible in place — like turning down a
+     dimmer switch. Then morph-collapsed (added by JS after the fade)
+     snaps the body out of flow so the thumb can expand. */
   .card.morph-active .card-body {
     opacity: 0 !important;
-    max-height: 0 !important;
-    padding: 0 !important;
-    overflow: hidden;
-    transition: opacity 500ms ease-out, max-height 600ms ease-out, padding 600ms ease-out !important;
-  }
-
-  .card.morph-active .card-thumb {
-    aspect-ratio: auto !important;
-    flex: 1 !important;
+    transition: opacity 220ms ease-out !important;
   }
 
   .card.morph-active .card-thumb img {
     opacity: 0 !important;
-    transition: opacity 600ms ease-out !important;
+    transition: opacity 220ms ease-out !important;
   }
 
-  .card.morph-active .card-duration { opacity: 0; transition: opacity 300ms ease-out; }
-  .card.morph-active .card-progress-bar { opacity: 0; transition: opacity 300ms ease-out; }
+  .card.morph-active .card-duration { opacity: 0; transition: opacity 180ms ease-out; }
+  .card.morph-active .card-progress-bar { opacity: 0; transition: opacity 180ms ease-out; }
 
   .card.morph-active {
     border-color: transparent !important;
     background: #0c0a08 !important;
+    /* NO transition here — it would override the .morph-clone transitions
+       for top/left/width/height. The border-color and background transitions
+       are already listed in .morph-clone's transition shorthand. */
+  }
+
+  /* morph-collapsed: added by JS AFTER the fade is done (~250ms).
+     Snaps the body to display:none so thumb can fill the clone. */
+  .card.morph-collapsed .card-body {
+    display: none !important;
+  }
+
+  .card.morph-collapsed .card-thumb {
+    aspect-ratio: auto !important;
+    flex: 1 !important;
   }
 
   /* Feathered dissolve: actual pixel transparency at edges.
@@ -288,7 +303,6 @@
   .card-body {
     padding: 18px 20px 22px; flex: 1;
     display: flex; flex-direction: column;
-    max-height: 200px; /* needed so reverse morph can animate max-height back from 0 */
   }
   .card-title {
     font-family: 'Playfair Display', Georgia, serif;
@@ -664,8 +678,8 @@ function morphToViewer(card, videoId) {
 
   // Step 1: Remove emphasis so we measure the card's NATURAL position
   // (emphasis adds scale + translateY which skews getBoundingClientRect)
-  const wasEmphasized = card.classList.contains('emphasized');
   card.classList.remove('emphasized');
+  emphasizedCard = null;   // ← CRITICAL: reset so the card can be re-emphasized after close
   card.style.transition = 'none';
   // Force the browser to recalculate layout immediately
   card.offsetHeight;
@@ -677,8 +691,10 @@ function morphToViewer(card, videoId) {
   // Step 3: Clone the card — this copies ALL its HTML, classes, and styles
   morphClone = card.cloneNode(true);
 
-  // Step 4: Remove emphasis and tilt classes from clone so it starts clean.
-  // The morph-clone class gives it position:fixed + CSS transitions.
+  // Step 4: Clone enters looking IDENTICAL to the real card — no classes
+  // that change its appearance. It sits exactly on top of the real card
+  // so the overlap is invisible. The real card stays visible underneath
+  // (hidden only after the fade completes).
   morphClone.classList.remove('emphasized', 'tilt');
   morphClone.classList.add('morph-clone');
 
@@ -693,9 +709,9 @@ function morphToViewer(card, videoId) {
   const track = document.getElementById('carouselTrack');
   track.style.scrollSnapType = 'none';
 
-  // Add clone to the page, then immediately hide the real card
+  // Append clone on top of real card. The real card is still visible
+  // underneath but perfectly covered by the identical-looking clone.
   document.body.appendChild(morphClone);
-  card.style.visibility = 'hidden';
   // Restore card transition for later
   card.style.transition = '';
 
@@ -741,33 +757,48 @@ function morphToViewer(card, videoId) {
       width: '100%',
       height: '100%',
       playerVars: { autoplay: 1, modestbranding: 1, rel: 0, start: startSec, playsinline: 1 },
-      events: { onReady: function(){}, onStateChange: onPlayerStateChange }
+      events: {
+        onReady: function(e) {
+          // iOS sometimes ignores autoplay:1 even within a gesture chain.
+          // Explicitly calling playVideo() within onReady is the fallback.
+          try { e.target.playVideo(); } catch(err) {}
+        },
+        onStateChange: onPlayerStateChange
+      }
     });
   } else {
     const iframe = document.createElement('iframe');
-    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&modestbranding=1&rel=0&playsinline=1`;
+    // mute=1 lets iOS autoplay; we unmute after a beat
+    const muteParam = /iPhone|iPad|iPod/i.test(navigator.userAgent) ? '&mute=1' : '';
+    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&modestbranding=1&rel=0&playsinline=1${muteParam}`;
     iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
     iframe.allowFullscreen = true;
     iframe.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;opacity:0;transition:opacity 400ms ease-out;z-index:5;';
     thumbDiv.appendChild(iframe);
   }
 
-  // Step 10: On the NEXT animation frame, set the target dimensions.
-  // The browser sees the values change and smoothly transitions
-  // from the old values to the new ones over 900ms.
+  // Step 10: SEQUENTIAL morph — fade to black FIRST, then shape morph.
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      morphClone.style.top = tTop + 'px';
-      morphClone.style.left = tLeft + 'px';
-      morphClone.style.width = tW + 'px';
-      morphClone.style.height = tH + 'px';
-      // Also trigger content fade + thumb expansion
+      // STEP A: Fade to black ONLY. Nothing else happens yet.
       morphClone.classList.add('morph-active');
+
+      // STEP B: After fade is complete (300ms), THEN start shape morph.
+      setTimeout(() => {
+        if (!morphClone) return;
+        morphClone.classList.add('morph-collapsed');
+        card.style.visibility = 'hidden';
+        // NOW set position targets — shape morph begins
+        morphClone.style.top = tTop + 'px';
+        morphClone.style.left = tLeft + 'px';
+        morphClone.style.width = tW + 'px';
+        morphClone.style.height = tH + 'px';
+      }, 300);
     });
   });
 
-  // Step 11: After morph completes (900ms), add feathered dissolve
-  // and reveal the video player
+  // Step 11: After fade (300ms) + shape morph (900ms) = 1200ms total,
+  // add feathered dissolve and reveal the video player
   setTimeout(() => {
     if (!morphClone) return;
     morphClone.classList.add('morph-dissolve');
@@ -793,7 +824,7 @@ function morphToViewer(card, videoId) {
     closeBtn.classList.add('visible');
 
     startProgressTracking(videoId);
-  }, 1000);
+  }, 1300);
 }
 
 
@@ -875,20 +906,22 @@ function morphToCard() {
     // Start fading backdrop
     document.getElementById('morphBackdrop').classList.remove('active');
 
-    // Set up reverse transitions on card body + thumb for content fade-in.
-    // We do this BEFORE removing morph-active, so the browser knows to
-    // animate from opacity:0 → opacity:1, max-height:0 → max-height:200px, etc.
+    // Set up reverse transitions — pure opacity fade-in, no spatial movement.
     const body = clone.querySelector('.card-body');
     const thumbImg = clone.querySelector('.card-thumb img');
     const duration = clone.querySelector('.card-duration');
     const pbar = clone.querySelector('.card-progress-bar');
 
-    if (body) body.style.transition = 'opacity 600ms ease-in 100ms, max-height 700ms ease-in, padding 700ms ease-in';
-    if (thumbImg) thumbImg.style.transition = 'opacity 600ms ease-in 200ms';
-    if (duration) duration.style.transition = 'opacity 500ms ease-in 300ms';
-    if (pbar) pbar.style.transition = 'opacity 500ms ease-in 300ms';
+    if (body) body.style.transition = 'opacity 500ms ease-in';
+    if (thumbImg) thumbImg.style.transition = 'opacity 500ms ease-in';
+    if (duration) duration.style.transition = 'opacity 400ms ease-in 100ms';
+    if (pbar) pbar.style.transition = 'opacity 400ms ease-in 100ms';
 
-    // Remove morph-active: this triggers card body/thumb to animate back to normal
+    // First: remove morph-collapsed so the body is back in the layout
+    // (it's still opacity:0 via morph-active, so the user sees nothing)
+    clone.classList.remove('morph-collapsed');
+
+    // Then: remove morph-active to trigger the pure opacity fade-in
     clone.classList.remove('morph-active');
 
     // On the next frame, set the position/size targets so the clone
