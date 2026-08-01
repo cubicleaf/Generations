@@ -20,6 +20,11 @@ Last updated: 2026-07-31
 
 ## Decisions
 
+### 2026-07-31 (v2) — Favicon redesigned: video-library card stack, light/rice-paper shell
+**What:** Replaced the single dark-shell play-triangle design with a three-card "video library" composition (from an uploaded reference SVG: a stack of three rounded-rect cards, decreasing depth, front card containing the play triangle cutout). Shell flipped from dark (`#1a1610`) to rice paper (`#f5f0e8`, matching the tone used across the rest of the portfolio). Front card is a warm coffee brown `#4a3527`; the two cards behind step up in lightness by a fixed geometric ratio (×1.42 per layer, in HSL space, hue/saturation held constant) — `#694b37`, then `#956b4f` — rather than eyeballed shades. Icon sized to 64% of canvas, verified by pixel measurement to sit fully inside the shell's 95%-fill bounds (the same margin ratio that worked well on Zifang's final approved size).
+**Why:** Direct request to keep Generations' original earthy color family but move to a richer, more literal "library of recordings" icon instead of an abstract play-triangle, and to lighten the background.
+**How to apply:** Files live in project root, relative `href`s (Netlify serves root directly, no rewrite rule). `index.html`'s `<link>` tags are unchanged — same filenames, only pixel content replaced.
+
 ### 2026-07-31 — Favicon set built and wired
 **What:** Full favicon set (`favicon.ico`, 16/32/180/192/512 PNGs, `site.webmanifest`) generated and added to project root; `<link>` tags wired into `index.html`, replacing the old single `apple-touch-icon` pointed at `og-image.png`. Design: dark shell (`#1a1610`, the site's own `--bg` token) with a gold play-triangle (`#c9a87c`, `--accent`) — nested inside the same rounded-square outer shell used for Master Reader/Charles Hub. Sized at 95% canvas fill.
 **Why:** Part of the portfolio-wide favicon rollout; grounded in Generations' real CSS tokens.
